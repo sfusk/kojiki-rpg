@@ -1,0 +1,17 @@
+{
+  "name": "kojiki-rpg",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "古事記RPG かむがたり",
+  "main": "js/main.js",
+  "scripts": {
+    "test": "vitest run",
+    "dev": "python3 -m http.server 8080"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "vitest": "^4.1.11"
+  }
+}
