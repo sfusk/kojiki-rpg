@@ -1,6 +1,6 @@
 // ゲームループ（title/field/msg/quiz/battle/menu モード）。
 // 内部解像度256x224（16x14タイル）を2倍描画し、512x448の物理canvasに表示する。
-import { buildSprites } from './data/sprites.js';
+import { buildSprites, buildTiles } from './data/sprites.js';
 import { createInput } from './engine/input.js';
 import { createRenderer, drawField, TILE } from './engine/renderer.js';
 import { tryStep, DIRS } from './engine/movement.js';
@@ -70,8 +70,9 @@ function main() {
   ctx.scale(2, 2); // 内部解像度256x224 → 物理512x448
 
   const sprites = buildSprites();
+  const tiles = buildTiles();
   const input = createInput(window);
-  const renderer = createRenderer(ctx, sprites);
+  const renderer = createRenderer(ctx, sprites, tiles);
 
   const initial = createState();
   const hasSave = loadGame(localStorage) !== null;
