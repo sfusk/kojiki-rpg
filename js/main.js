@@ -33,20 +33,20 @@ const CODEX_CATEGORIES = ['かみ', 'ちめい', 'ことば'];
 // 各行は12文字以内に収め、paginateText（charsPerLine=12既定）による
 // 自動折り返しで単語の途中が割れないようにしている。
 const ENDING_STAGES = [
-  ['イザナギと', 'イザナミは', 'くにを うみ', 'かみがみを', 'うんだ。', '',
-   'よみのくにの', 'わかれの のち', 'イザナギは', 'みそぎをして',
-   'アマテラス', 'ツクヨミ', 'スサノオの', 'みはしらが', 'うまれた。'].join('\n'),
-  ['アマテラスの', 'ちすじは', 'まご ニニギへ', 'うけつがれ', 'たかまがはら',
-   'から ひむかへ', 'あまくだった。', '',
-   'やまさちひこを', 'へて', 'かむやまと', 'いわれびこが',
-   'やまとを', 'ひらいた。', 'それが', 'じんむてんのう。'].join('\n'),
-  ['あらぶるかみ', 'スサノオは', 'やまたの', 'おろちを', 'たいじし',
-   'クシナダヒメと', 'むすばれた。', '',
-   'そのすえの', 'オオクニヌシは', 'こころみを', 'のりこえて',
-   'くにを きずき', 'のちに', 'あまつかみへ', 'くにを', 'ゆずりわたした。'].join('\n'),
-  ['これが', 'かみがたりの', 'ものがたり。', '',
-   'ふることぶみ', '（古事記）は', 'いまも', 'かたりつがれて', 'いる。', '',
-   '―― おわり'].join('\n'),
+  ['イザナギと', 'イザナミは', '国を生み', '神々を', '生んだ。', '',
+   '黄泉国の', '別れののち', 'イザナギは', '禊をして',
+   'アマテラス', 'ツクヨミ', 'スサノオの', '三貴子が', '生まれた。'].join('\n'),
+  ['アマテラスの', '血筋は', '孫ニニギへ', '受け継がれ', '高天原',
+   'から日向へ', '天下った。', '',
+   '山幸彦を', '経て', 'カムヤマト', 'イワレビコが',
+   '大和を', '開いた。', 'それが', '神武天皇。'].join('\n'),
+  ['荒ぶる神', 'スサノオは', 'ヤマタの', 'オロチを', '退治し',
+   'クシナダヒメと', '結ばれた。', '',
+   'その末の', 'オオクニヌシは', '試みを', '乗り越えて',
+   '国を築き', '後に', '天つ神へ', '国を', '譲り渡した。'].join('\n'),
+  ['これが', '神語りの', '物語。', '',
+   'ふることぶみ', '（古事記）は', '今も', '語り継がれて', 'いる。', '',
+   '―― 終わり'].join('\n'),
 ];
 const ENDING_LINES_PER_PAGE = 5;
 
@@ -208,7 +208,7 @@ function main() {
   function openMenu() {
     state.menu = {
       section: 'root',
-      rootWin: createChoiceWindow(['つよさ', 'たびのしょ', 'とじる']),
+      rootWin: createChoiceWindow(['つよさ', '旅の書', 'とじる']),
       tabWin: null,
       bookWin: null,
       bookIds: null,   // m.bookWin.items（もどる含む）に対応するCODEXのid配列
@@ -355,7 +355,7 @@ function main() {
       else if (input.consume('z')) {
         const r = answerQuiz(quiz.data, quiz.win.cursor);
         quiz.result = r;
-        quiz.resultMsg = createMessageBox(r.correct ? `せいかい！ ${r.explain}` : `ちがう…　${r.explain}`);
+        quiz.resultMsg = createMessageBox(r.correct ? `正解！ ${r.explain}` : `違う…　${r.explain}`);
         quiz.phase = 'result';
       }
     } else {
@@ -401,7 +401,7 @@ function main() {
         if (cmd === 0) { battleAct(b.data, 'attack'); startBattleLog(b); }
         else if (cmd === 1) {
           if (state.items.length === 0) {
-            b.data.log = ['どうぐを もっていない！'];
+            b.data.log = ['道具を持っていない！'];
             startBattleLog(b);
           } else {
             b.itemWin = createChoiceWindow([...state.items, 'もどる']);
@@ -441,7 +441,7 @@ function main() {
             const hint = (BOSSES[b.id] && BOSSES[b.id].hint) || '';
             state.battle = null;
             state.activeEvent = null; // イベントは中断する
-            state.msg = createMessageBox(`めのまえが まっくらになった…\n${hint}`);
+            state.msg = createMessageBox(`目の前が\n真っ暗になった…\n${hint}`);
             state.mode = 'msg';
           }
         } else {
@@ -456,9 +456,9 @@ function main() {
     const b = state.battle;
     drawWindow(ctx, 8, 8, 240, 36);
     drawText(ctx, `${b.data.boss.name}`, 14, 12);
-    drawText(ctx, `てき HP:${Math.max(b.data.bossHp, 0)}`, 14, 30);
+    drawText(ctx, `敵 HP:${Math.max(b.data.bossHp, 0)}`, 14, 30);
     drawWindow(ctx, 8, 116, 240, 24);
-    drawText(ctx, `たびびと HP:${Math.max(b.data.playerHp, 0)}`, 14, 122);
+    drawText(ctx, `旅人 HP:${Math.max(b.data.playerHp, 0)}`, 14, 122);
 
     if (b.phase === 'command') {
       drawChoiceWindow(ctx, b.cmdWin, 8, 148, 120, 74);
@@ -538,11 +538,11 @@ function main() {
       const lines = state.items.length > 0 ? state.items : ['なし'];
       const h = powerWinHeight(state.items.length);
       drawWindow(ctx, POWER_WIN_X, POWER_WIN_Y, POWER_WIN_W, h);
-      drawText(ctx, `たまの かず：${state.orbs}`, 14, 16);
-      drawText(ctx, 'もちもの：', 14, 38);
+      drawText(ctx, `玉の数：${state.orbs}`, 14, 16);
+      drawText(ctx, '持ち物：', 14, 38);
       lines.forEach((label, i) => drawText(ctx, label, 14, POWER_ITEM_START_Y + i * POWER_ITEM_LINE_H));
       const footerY = POWER_ITEM_START_Y + (lines.length - 1) * POWER_ITEM_LINE_H + POWER_ITEM_LINE_H + POWER_FOOTER_GAP;
-      drawText(ctx, '（ZかXで もどる）', 14, footerY);
+      drawText(ctx, '（ZかXでもどる）', 14, footerY);
     } else if (m.section === 'tab') {
       drawChoiceWindow(ctx, m.tabWin, 140, 8, 108, 22 * m.tabWin.items.length + 16);
     } else if (m.section === 'list') {

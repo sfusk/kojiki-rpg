@@ -35,43 +35,43 @@ export const WORLD = {
     // ch2 よもつひらさか（洞窟口）
     {
       x: 5, y: 5, requires: 'ch1_clear',
-      lockedMsg: 'つよい けがれを かんじる。まだ はいれない…',
+      lockedMsg: '強い穢れを感じる。\nまだ入れない…',
       event: [{ warp: { map: 'ch2', x: 8, y: 9, dir: 'up' } }],
     },
     // ch3 たかまがはら（鳥居）
     {
       x: 17, y: 1, requires: 'ch2_clear',
-      lockedMsg: 'あめの はしごは まだ おりてこない…',
+      lockedMsg: '天の梯子は\nまだ下りてこない…',
       event: [{ warp: { map: 'ch3', x: 7, y: 9, dir: 'up' } }],
     },
     // ch4 いずも
     {
       x: 6, y: 9, requires: 'ch3_clear',
-      lockedMsg: 'かわかみから なきごえが きこえるが みちが ない…',
+      lockedMsg: '川上から\n鳴き声が聞こえるが\n道がない…',
       event: [{ warp: { map: 'ch4', x: 7, y: 8, dir: 'up' } }],
     },
     // ch5 いなば
     {
       x: 16, y: 9, requires: 'ch4_clear',
-      lockedMsg: 'しろうさぎの なきごえが きこえるが、まだ すすめない…',
+      lockedMsg: '白兎の鳴き声が\n聞こえるが、\nまだ進めない…',
       event: [{ warp: { map: 'ch5', x: 6, y: 1, dir: 'up' } }],
     },
     // ch6 くにゆずり（いなさのはま）
     {
       x: 5, y: 10, requires: 'ch5_clear',
-      lockedMsg: 'うみの むこうから おおきな きはいを かんじる…',
+      lockedMsg: '海の向こうから\n大きな気配を\n感じる…',
       event: [{ warp: { map: 'ch6', x: 8, y: 8, dir: 'up' } }],
     },
     // ch7 ひむか
     {
       x: 13, y: 12, requires: 'ch6_clear',
-      lockedMsg: 'みなみの かぜが つよく ふき、まだ そのさきへは いけない…',
+      lockedMsg: '南の風が\n強く吹き、\nまだその先へは\n行けない…',
       event: [{ warp: { map: 'ch7', x: 8, y: 8, dir: 'up' } }],
     },
     // ch8 やまと
     {
       x: 9, y: 6, requires: 'ch7_clear',
-      lockedMsg: 'とおくに やまとの くにが みえるが、みちは まだ とざされている…',
+      lockedMsg: '遠くに大和の国が\n見えるが、\n道はまだ\n閉ざされている…',
       event: [{ warp: { map: 'ch8', x: 7, y: 9, dir: 'up' } }],
     },
   ],
