@@ -446,7 +446,9 @@ function main() {
   function loop() {
     if (state.mode === 'title') {
       updateTitle();
-      drawTitle();
+      // updateTitleがこのフレーム内でmode:'field'へ遷移させ、
+      // state.titleをnullにすることがあるため、遷移後はdrawTitleを呼ばない
+      if (state.mode === 'title') drawTitle();
       requestAnimationFrame(loop);
       return;
     }
