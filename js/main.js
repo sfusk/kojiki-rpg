@@ -1,13 +1,15 @@
-// ゲームループ（field/msg/quiz/battle/menu モード）。
+// ゲームループ（title/field/msg/quiz/battle/menu モード）。
 // 内部解像度256x224（16x14タイル）を2倍描画し、512x448の物理canvasに表示する。
 import { buildSprites } from './data/sprites.js';
 import { createInput } from './engine/input.js';
 import { createRenderer, drawField, TILE } from './engine/renderer.js';
 import { tryStep, DIRS } from './engine/movement.js';
-import { createState } from './engine/flags.js';
+import { createState, hasFlag } from './engine/flags.js';
 import { startEvent, stepEvent } from './engine/events.js';
 import { createQuiz, answerQuiz } from './engine/quiz.js';
 import { createBattle, battleAct } from './engine/battle.js';
+import { saveGame, loadGame } from './engine/save.js';
+import { CHAPTERS } from './data/chapters/index.js';
 import { BOSSES } from './data/bosses.js';
 import { CODEX } from './data/codexData.js';
 import {
@@ -17,55 +19,7 @@ import {
 } from './engine/window.js';
 
 const TWEEN_FRAMES = 8; // 1タイル移動にかけるフレーム数
-
-// ── 仮データ（Task 10以降で本実装のマップ/クイズ/イベントデータに差し替えて削除する）──
-const testMap = {
-  rows: [
-    '#########',
-    '#.......#',
-    '#.M.....#',
-    '#...T...#',
-    '#.......#',
-    '#.......#',
-    '#########',
-  ],
-};
-
-const npcs = [
-  { name: 'elder', x: 5, y: 2, frame: 0, eventId: 'elderTalk' },
-  { name: 'rabbit', x: 6, y: 4, frame: 0 },
-];
-
-// 会話→クイズ→戦闘UIの一連の流れを目視確認するための仮イベント
-const DEMO_EVENTS = {
-  elderTalk: [
-    {
-      if: 'met_elder',
-      then: [{ msg: 'また あそびにきたか たびびとよ' }],
-      else: [
-        { msg: 'おお たびびとよ よくきた' },
-        { msg: 'まずは こじきの ちしきを ためそう' },
-        { quiz: 'demoQuiz' },
-        { msg: 'みごとじゃ！ ちからを さずけよう' },
-        { give: 'へびのひれ' },
-        { set: 'met_elder' },
-        { msg: 'では さいごに この さきの へびを しずめてくるのじゃ' },
-        { battle: 'hebi' },
-        { msg: 'おお もどったか！ たびびとよ' },
-      ],
-    },
-  ],
-};
-
-const DEMO_QUIZZES = {
-  demoQuiz: [
-    { q: 'イザナギの つまの なは？', choices: ['アマテラス', 'イザナミ', 'スセリビメ', 'クシナダヒメ'],
-      answer: 1, explain: 'イザナミです。くにうみの おんながみです。' },
-    { q: 'あまのいわとに かくれたのは だれ？', choices: ['ツクヨミ', 'スサノオ', 'アマテラス', 'オオクニヌシ'],
-      answer: 2, explain: 'アマテラスです。よが やみに つつまれました。' },
-  ],
-};
-// ── 仮データここまで ──────────────────────────────────
+const DEFAULT_LOCKED_MSG = '…'; // requires未達成時、lockedMsg省略時のメッセージ
 
 function createHero(tx, ty) {
   return {
@@ -90,10 +44,13 @@ function main() {
   const input = createInput(window);
   const renderer = createRenderer(ctx, sprites);
 
+  const initial = createState();
+  const hasSave = loadGame(localStorage) !== null;
+
   const state = {
-    ...createState(),
-    mode: 'field', // field/msg/quiz/battle/menu
-    hero: createHero(1, 1),
+    ...initial,
+    mode: 'title', // title/field/msg/quiz/battle/menu
+    hero: createHero(initial.pos.x, initial.pos.y),
     animTick: 0,
     returnPos: null,   // 戦闘敗北時に戻すフィールド上の位置
     activeEvent: null, // 進行中のevent（startEventの戻り値）
@@ -101,7 +58,30 @@ function main() {
     quiz: null,        // { data, id, win, phase: 'ask'|'result', resultMsg }
     battle: null,      // { data, id, phase: 'command'|'item'|'log', cmdWin, itemWin, logBox }
     menu: null,        // { section: 'root'|'power'|'book'|'detail', rootWin, bookWin, detailText }
+    title: createChoiceWindow(hasSave ? ['はじめから', 'つづきから'] : ['はじめから']),
   };
+
+  // ── マップ遷移：state.pos.map で CHAPTERS から現マップを引く ──
+  function currentChapter() {
+    return CHAPTERS[state.pos.map];
+  }
+
+  // heroのタイル/ピクセル座標をstate.posへ合わせる（title開始時・warp後に使う）
+  function syncHeroToPos() {
+    const hero = state.hero;
+    hero.tx = state.pos.x;
+    hero.ty = state.pos.y;
+    hero.dir = state.pos.dir;
+    hero.px = hero.tx * TILE;
+    hero.py = hero.ty * TILE;
+    hero.fromPx = hero.px;
+    hero.fromPy = hero.py;
+    hero.targetTx = hero.tx;
+    hero.targetTy = hero.ty;
+    hero.moving = false;
+    hero.tweenFrame = 0;
+    hero.frame = 0;
+  }
 
   // ── イベント進行の共通処理 ──────────────────────────
   function beginEvent(commands) {
@@ -117,7 +97,7 @@ function main() {
       state.mode = 'msg';
       state.msg = createMessageBox(r.text);
     } else if (r.kind === 'quiz') {
-      const questions = DEMO_QUIZZES[r.id] || [];
+      const questions = (CHAPTERS[r.id] && CHAPTERS[r.id].quiz) || [];
       state.quiz = { data: createQuiz(questions), id: r.id, phase: 'ask', win: null, question: null, result: null, resultMsg: null };
       startQuizQuestion();
       state.mode = 'quiz';
@@ -131,8 +111,11 @@ function main() {
       };
       state.mode = 'battle';
     } else {
+      // イベント完了：state.posはwarpで既に更新済みのはずなのでheroを合わせ、オートセーブする
       state.activeEvent = null;
       state.mode = 'field';
+      syncHeroToPos();
+      saveGame(state, localStorage);
     }
   }
 
@@ -161,18 +144,55 @@ function main() {
     state.mode = 'menu';
   }
 
-  // ── field：移動＋前方インタラクト ──────────────────
+  // requires未達成ならlockedMsgを表示するだけでイベントは開始しない（NPC・トリガー共通）
+  function startGatedEvent(entity) {
+    if (entity.requires && !hasFlag(state, entity.requires)) {
+      state.msg = createMessageBox(entity.lockedMsg || DEFAULT_LOCKED_MSG);
+      state.mode = 'msg';
+      return;
+    }
+    beginEvent(entity.event || []);
+  }
+
+  // ── title：はじめから／つづきから ───────────────────
+  function updateTitle() {
+    if (input.consume('ArrowUp')) moveChoiceCursor(state.title, -1);
+    else if (input.consume('ArrowDown')) moveChoiceCursor(state.title, 1);
+    else if (input.consume('z')) {
+      const label = state.title.items[state.title.cursor];
+      if (label === 'つづきから') {
+        const loaded = loadGame(localStorage);
+        if (loaded) {
+          state.flags = loaded.flags;
+          state.items = loaded.items;
+          state.orbs = loaded.orbs;
+          state.codex = loaded.codex;
+          state.pos = loaded.pos;
+        }
+      }
+      syncHeroToPos();
+      state.title = null;
+      state.mode = 'field';
+    }
+  }
+
+  function drawTitle() {
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, 256, 224);
+    drawText(ctx, 'かむがたり', 92, 60);
+    drawChoiceWindow(ctx, state.title, 70, 100, 116, 22 * state.title.items.length + 16);
+  }
+
+  // ── field：移動＋前方インタラクト（NPC）＋踏むと発動（トリガー）──
   function frontTile(hero) {
     const { dx, dy } = DIRS[hero.dir];
     return { x: hero.tx + dx, y: hero.ty + dy };
   }
 
-  function findNpcAt(x, y) {
-    return npcs.find((n) => n.x === x && n.y === y);
-  }
-
   function updateField() {
     const hero = state.hero;
+    const chapter = currentChapter();
+    const npcs = chapter.npcs || [];
     state.animTick++;
     if (state.animTick % 30 === 0) {
       for (const npc of npcs) npc.frame = npc.frame ? 0 : 1;
@@ -182,8 +202,8 @@ function main() {
 
     if (input.consume('z')) {
       const front = frontTile(hero);
-      const npc = findNpcAt(front.x, front.y);
-      if (npc && DEMO_EVENTS[npc.eventId]) { beginEvent(DEMO_EVENTS[npc.eventId]); return; }
+      const npc = npcs.find((n) => n.x === front.x && n.y === front.y);
+      if (npc) { startGatedEvent(npc); return; }
     }
 
     if (!hero.moving) {
@@ -195,7 +215,8 @@ function main() {
 
       if (dir) {
         hero.dir = dir;
-        const result = tryStep(testMap, { x: hero.tx, y: hero.ty, dir }, dir);
+        state.pos.dir = dir;
+        const result = tryStep(chapter.map, { x: hero.tx, y: hero.ty, dir }, dir);
         if (result.moved) {
           hero.moving = true;
           hero.tweenFrame = 0;
@@ -223,6 +244,11 @@ function main() {
         hero.py = targetPy;
         hero.moving = false;
         hero.frame = 0;
+        state.pos.x = hero.tx;
+        state.pos.y = hero.ty;
+
+        const trigger = (chapter.triggers || []).find((tr) => tr.x === hero.tx && tr.y === hero.ty);
+        if (trigger) startGatedEvent(trigger);
       }
     }
   }
@@ -331,6 +357,7 @@ function main() {
             state.hero.tx = pos.tx; state.hero.ty = pos.ty; state.hero.dir = pos.dir;
             state.hero.px = pos.tx * TILE; state.hero.py = pos.ty * TILE;
             state.hero.moving = false;
+            state.pos.x = pos.tx; state.pos.y = pos.ty; state.pos.dir = pos.dir;
             state.battle = null;
             state.activeEvent = null; // イベントは中断する
             state.msg = createMessageBox('めのまえが まっくらになった…');
@@ -417,7 +444,16 @@ function main() {
   }
 
   function loop() {
-    drawField(renderer, testMap, state, npcs);
+    if (state.mode === 'title') {
+      updateTitle();
+      drawTitle();
+      requestAnimationFrame(loop);
+      return;
+    }
+
+    const chapter = currentChapter();
+    const drawNpcs = (chapter.npcs || []).map((n) => ({ name: n.sprite, x: n.x, y: n.y, frame: n.frame || 0 }));
+    drawField(renderer, chapter.map, state, drawNpcs);
 
     if (state.mode === 'field') {
       updateField();
@@ -435,7 +471,7 @@ function main() {
       updateMenu();
       if (state.menu) drawMenu();
     }
-    // title/ending は未実装（今後のタスクで追加）
+    // ending は未実装（今後のタスクで追加）
     requestAnimationFrame(loop);
   }
 
