@@ -60,7 +60,7 @@ export const WORLD = {
     {
       x: 5, y: 10, requires: 'ch5_clear',
       lockedMsg: 'うみの むこうから おおきな きはいを かんじる…',
-      event: [{ warp: { map: 'ch6', x: 8, y: 10, dir: 'up' } }],
+      event: [{ warp: { map: 'ch6', x: 8, y: 8, dir: 'up' } }],
     },
     // ch7 ひむか
     {
