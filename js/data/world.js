@@ -42,7 +42,7 @@ export const WORLD = {
     {
       x: 17, y: 1, requires: 'ch2_clear',
       lockedMsg: 'あめの はしごは まだ おりてこない…',
-      event: [{ warp: { map: 'ch3', x: 8, y: 10, dir: 'up' } }],
+      event: [{ warp: { map: 'ch3', x: 7, y: 9, dir: 'up' } }],
     },
     // ch4 いずも
     {
