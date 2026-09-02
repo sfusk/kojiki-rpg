@@ -66,7 +66,7 @@ export const WORLD = {
     {
       x: 13, y: 12, requires: 'ch6_clear',
       lockedMsg: 'みなみの かぜが つよく ふき、まだ そのさきへは いけない…',
-      event: [{ warp: { map: 'ch7', x: 8, y: 10, dir: 'up' } }],
+      event: [{ warp: { map: 'ch7', x: 8, y: 8, dir: 'up' } }],
     },
     // ch8 やまと
     {
