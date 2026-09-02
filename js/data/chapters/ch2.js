@@ -30,6 +30,8 @@ export const CH2 = {
       x: 7, y: 9,
       sprite: 'lord',
       event: [
+        { msg: 'ひのかみ カグツチを うんで イザナミは みまかった。' },
+        { codex: 'kagutsuchi' },
         { msg: 'イザナミを つれもどしに きた。' },
         { msg: 'だが「すがたを みるな」という やくそくを…' },
         { codex: 'yomi' },

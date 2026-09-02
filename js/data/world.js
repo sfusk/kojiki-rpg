@@ -31,7 +31,7 @@ export const WORLD = {
   entry: { x: 11, y: 8 },
   triggers: [
     // ch1 オノゴロ島：requiresなし（さいしょから はいれる）
-    { x: 8, y: 12, event: [{ warp: { map: 'ch1', x: 8, y: 10, dir: 'up' } }] },
+    { x: 8, y: 12, event: [{ warp: { map: 'ch1', x: 7, y: 10, dir: 'up' } }] },
     // ch2 よもつひらさか（洞窟口）
     {
       x: 5, y: 5, requires: 'ch1_clear',

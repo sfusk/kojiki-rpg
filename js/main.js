@@ -17,6 +17,12 @@ import {
   createMessageBox, advanceMessageBox, tickMessageBox,
   createChoiceWindow, moveChoiceCursor, paginateText,
 } from './engine/window.js';
+import {
+  BATTLE_ITEM_WIN_X, BATTLE_ITEM_WIN_Y, BATTLE_ITEM_WIN_W, BATTLE_ITEM_LINE_H,
+  BATTLE_ITEM_MAX_VISIBLE, battleItemWinHeight,
+  POWER_WIN_X, POWER_WIN_Y, POWER_WIN_W, POWER_ITEM_START_Y, POWER_ITEM_LINE_H,
+  POWER_FOOTER_GAP, powerWinHeight,
+} from './data/uiLayout.js';
 
 const TWEEN_FRAMES = 8; // 1タイル移動にかけるフレーム数
 const DEFAULT_LOCKED_MSG = '…'; // requires未達成時、lockedMsg省略時のメッセージ
@@ -236,6 +242,10 @@ function main() {
           state.codex = loaded.codex;
           state.pos = loaded.pos;
         }
+      } else {
+        // はじめから：セーブデータと状態を初期化する（真エンディング後もここから周回できるように）
+        Object.assign(state, createState());
+        localStorage.removeItem('kamugatari_save');
       }
       syncHeroToPos();
       state.title = null;
@@ -428,9 +438,10 @@ function main() {
             state.hero.px = pos.tx * TILE; state.hero.py = pos.ty * TILE;
             state.hero.moving = false;
             state.pos.x = pos.tx; state.pos.y = pos.ty; state.pos.dir = pos.dir;
+            const hint = (BOSSES[b.id] && BOSSES[b.id].hint) || '';
             state.battle = null;
             state.activeEvent = null; // イベントは中断する
-            state.msg = createMessageBox('めのまえが まっくらになった…');
+            state.msg = createMessageBox(`めのまえが まっくらになった…\n${hint}`);
             state.mode = 'msg';
           }
         } else {
@@ -452,7 +463,11 @@ function main() {
     if (b.phase === 'command') {
       drawChoiceWindow(ctx, b.cmdWin, 8, 148, 120, 74);
     } else if (b.phase === 'item') {
-      drawChoiceWindow(ctx, b.itemWin, 8, 148, 168, 22 * b.itemWin.items.length + 16);
+      const h = battleItemWinHeight(b.itemWin.items.length);
+      drawChoiceWindow(
+        ctx, b.itemWin, BATTLE_ITEM_WIN_X, BATTLE_ITEM_WIN_Y, BATTLE_ITEM_WIN_W, h,
+        BATTLE_ITEM_LINE_H, BATTLE_ITEM_MAX_VISIBLE,
+      );
     } else if (b.phase === 'log') {
       drawMessageBox(ctx, b.logBox, 8, 148, 240, 68);
     }
@@ -520,11 +535,14 @@ function main() {
     if (m.section === 'root') {
       drawChoiceWindow(ctx, m.rootWin, 140, 8, 108, 74);
     } else if (m.section === 'power') {
-      drawWindow(ctx, 8, 8, 240, 92);
+      const lines = state.items.length > 0 ? state.items : ['なし'];
+      const h = powerWinHeight(state.items.length);
+      drawWindow(ctx, POWER_WIN_X, POWER_WIN_Y, POWER_WIN_W, h);
       drawText(ctx, `たまの かず：${state.orbs}`, 14, 16);
       drawText(ctx, 'もちもの：', 14, 38);
-      drawText(ctx, state.items.length > 0 ? state.items.join('・') : 'なし', 14, 58);
-      drawText(ctx, '（ZかXで もどる）', 14, 80);
+      lines.forEach((label, i) => drawText(ctx, label, 14, POWER_ITEM_START_Y + i * POWER_ITEM_LINE_H));
+      const footerY = POWER_ITEM_START_Y + (lines.length - 1) * POWER_ITEM_LINE_H + POWER_ITEM_LINE_H + POWER_FOOTER_GAP;
+      drawText(ctx, '（ZかXで もどる）', 14, footerY);
     } else if (m.section === 'tab') {
       drawChoiceWindow(ctx, m.tabWin, 140, 8, 108, 22 * m.tabWin.items.length + 16);
     } else if (m.section === 'list') {
