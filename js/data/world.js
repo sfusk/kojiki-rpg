@@ -48,7 +48,7 @@ export const WORLD = {
     {
       x: 6, y: 9, requires: 'ch3_clear',
       lockedMsg: 'かわかみから なきごえが きこえるが みちが ない…',
-      event: [{ warp: { map: 'ch4', x: 8, y: 10, dir: 'up' } }],
+      event: [{ warp: { map: 'ch4', x: 7, y: 8, dir: 'up' } }],
     },
     // ch5 いなば
     {
