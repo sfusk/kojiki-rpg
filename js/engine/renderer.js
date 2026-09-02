@@ -76,12 +76,15 @@ export function drawField(r, map, state, npcs = []) {
   }
 
   // NPC描画（タイル座標。スプライトは `${name}_${frame}`）
+  // スプライト定義は32x32（精細ドット）だが、画面上のサイズはTILE(16)ユニットのまま。
+  // imageSmoothingEnabled=false（main.js側で設定済み）によりニアレストネイバーで縮小され、
+  // ドット密度だけが上がる。
   for (const npc of npcs) {
     const spr = sprites.get(`${npc.name}_${npc.frame || 0}`);
     if (!spr) continue;
     const sx = npc.x * TILE - camX;
     const sy = npc.y * TILE - camY;
-    ctx.drawImage(spr, sx, sy);
+    ctx.drawImage(spr, sx, sy, TILE, TILE);
   }
 
   // 主人公描画（連続ピクセル座標。スプライトは `hero_${dir}_${frame}`）
@@ -89,6 +92,6 @@ export function drawField(r, map, state, npcs = []) {
   if (heroSpr) {
     const sx = hero.px - camX;
     const sy = hero.py - camY;
-    ctx.drawImage(heroSpr, sx, sy);
+    ctx.drawImage(heroSpr, sx, sy, TILE, TILE);
   }
 }

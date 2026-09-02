@@ -15,11 +15,11 @@ describe('sprites.js', () => {
     }
   });
 
-  it('全スプライトが16行×16文字である', () => {
+  it('全スプライトが32行×32文字である', () => {
     for (const [name, rows] of Object.entries(SPRITES)) {
-      expect(rows.length, `${name} の行数`).toBe(16);
+      expect(rows.length, `${name} の行数`).toBe(32);
       for (const [i, row] of rows.entries()) {
-        expect(row.length, `${name} の${i}行目の文字数`).toBe(16);
+        expect(row.length, `${name} の${i}行目の文字数`).toBe(32);
       }
     }
   });
