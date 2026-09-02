@@ -8,6 +8,10 @@ export function createInput(target) {
   const onKeyDown = (e) => {
     if (ARROW_KEYS.has(e.key)) e.preventDefault();
     if (!TRACKED_KEYS.has(e.key)) return;
+    // 長押し中のネイティブkeydownリピートを無視する。
+    // これを無視しないと、consume()で一度取り出して消したキーが
+    // リピートイベントで即座に再追加され、単発入力のはずが連続発火してしまう。
+    if (e.repeat) return;
     down.add(e.key);
   };
   const onKeyUp = (e) => {
