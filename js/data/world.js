@@ -36,7 +36,7 @@ export const WORLD = {
     {
       x: 5, y: 5, requires: 'ch1_clear',
       lockedMsg: 'つよい けがれを かんじる。まだ はいれない…',
-      event: [{ warp: { map: 'ch2', x: 8, y: 10, dir: 'up' } }],
+      event: [{ warp: { map: 'ch2', x: 8, y: 9, dir: 'up' } }],
     },
     // ch3 たかまがはら（鳥居）
     {
