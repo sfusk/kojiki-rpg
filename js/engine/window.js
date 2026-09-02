@@ -40,7 +40,11 @@ export function drawText(ctx, text, x, y) {
 // ── テキストのページング（純粋関数） ─────────────────────
 // \n を明示改行として尊重しつつ、charsPerLine文字ごとに折り返し、
 // linesPerPage行を1ページとして分割する。空文字でも最低1ページ（空行1つ）を返す。
-export function paginateText(text, charsPerLine = 18, linesPerPage = 2) {
+// charsPerLine既定値12：実機のcanvas.measureTextで実測すると、このゲームの
+// フォント（"16px 'ＭＳ ゴシック', monospace"）では全角1文字=16px。
+// メッセージ窓の標準幅240px・左パディング12pxのもとで、右側に▼記号ぶんの
+// 余白（24px）を確保しつつ枠内に収まる最大文字数が12（12*16=192px）。
+export function paginateText(text, charsPerLine = 12, linesPerPage = 2) {
   const rawLines = String(text ?? '').split('\n');
   const lines = [];
   for (const raw of rawLines) {
@@ -58,7 +62,7 @@ export function paginateText(text, charsPerLine = 18, linesPerPage = 2) {
 
 // ── MessageBox：2行ずつページ表示・▼点滅・Z送り ───────────
 export function createMessageBox(text, opts = {}) {
-  const charsPerLine = opts.charsPerLine ?? 18;
+  const charsPerLine = opts.charsPerLine ?? 12;
   const linesPerPage = opts.linesPerPage ?? 2;
   return {
     pages: paginateText(text, charsPerLine, linesPerPage),
@@ -94,7 +98,8 @@ export function drawMessageBox(ctx, box, x, y, w, h) {
   drawWindow(ctx, x, y, w, h);
   const page = box.pages[box.pageIndex] || [''];
   page.forEach((line, i) => drawText(ctx, line, x + 12, y + 10 + i * 22));
-  if (isBlinkVisible(box)) drawText(ctx, '▼', x + w - 24, y + h - 26);
+  // ▼は「まだ続きがある」しるし。最終ページ（Zで閉じる/次へ進む）では出さないDQ風の演出。
+  if (!isMessageBoxLastPage(box) && isBlinkVisible(box)) drawText(ctx, '▼', x + w - 24, y + h - 26);
 }
 
 // ── ChoiceWindow：縦選択肢・▶カーソル・上下移動 ───────────
@@ -112,11 +117,24 @@ export function moveChoiceCursor(win, delta) {
   win.cursor = moveCursor(win.cursor, delta, win.items.length);
 }
 
-export function drawChoiceWindow(ctx, win, x, y, w, h, lineHeight = 22) {
+// maxVisible省略時は全項目を描画（従来どおり）。指定時はカーソルが常に見えるよう
+// スクロールし、隠れている項目があれば上下に▲▼を出す（旅の書のような長い一覧向け）。
+export function drawChoiceWindow(ctx, win, x, y, w, h, lineHeight = 22, maxVisible) {
   drawWindow(ctx, x, y, w, h);
-  win.items.forEach((label, i) => {
-    const ly = y + 10 + i * lineHeight;
+  const count = win.items.length;
+  const visible = maxVisible && count > maxVisible ? maxVisible : count;
+  let start = 0;
+  if (maxVisible && count > maxVisible) {
+    start = Math.min(Math.max(win.cursor - Math.floor(maxVisible / 2), 0), count - maxVisible);
+  }
+  for (let row = 0; row < visible; row++) {
+    const i = start + row;
+    const ly = y + 10 + row * lineHeight;
     if (i === win.cursor) drawText(ctx, '▶', x + 8, ly);
-    drawText(ctx, String(label), x + 28, ly);
-  });
+    drawText(ctx, String(win.items[i]), x + 28, ly);
+  }
+  if (maxVisible && count > maxVisible) {
+    if (start > 0) drawText(ctx, '▲', x + w - 20, y - 2);
+    if (start + visible < count) drawText(ctx, '▼', x + w - 20, y + h - 20);
+  }
 }

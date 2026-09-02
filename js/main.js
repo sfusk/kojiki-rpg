@@ -4,7 +4,7 @@ import { buildSprites } from './data/sprites.js';
 import { createInput } from './engine/input.js';
 import { createRenderer, drawField, TILE } from './engine/renderer.js';
 import { tryStep, DIRS } from './engine/movement.js';
-import { createState, hasFlag } from './engine/flags.js';
+import { createState, hasFlag, setFlag } from './engine/flags.js';
 import { startEvent, stepEvent } from './engine/events.js';
 import { createQuiz, answerQuiz } from './engine/quiz.js';
 import { createBattle, battleAct } from './engine/battle.js';
@@ -15,11 +15,34 @@ import { CODEX } from './data/codexData.js';
 import {
   drawWindow, drawText, drawMessageBox, drawChoiceWindow,
   createMessageBox, advanceMessageBox, tickMessageBox,
-  createChoiceWindow, moveChoiceCursor,
+  createChoiceWindow, moveChoiceCursor, paginateText,
 } from './engine/window.js';
 
 const TWEEN_FRAMES = 8; // 1タイル移動にかけるフレーム数
 const DEFAULT_LOCKED_MSG = '…'; // requires未達成時、lockedMsg省略時のメッセージ
+const BOOK_LIST_VISIBLE = 7; // 旅の書：一覧に一度に表示する項目数（スクロール表示の閾値）
+const CODEX_CATEGORIES = ['かみ', 'ちめい', 'ことば'];
+
+// 真エンディング：state.orbs >= 8 になった直後に表示する神々の系譜（Z送りで4段階）
+// 各行は12文字以内に収め、paginateText（charsPerLine=12既定）による
+// 自動折り返しで単語の途中が割れないようにしている。
+const ENDING_STAGES = [
+  ['イザナギと', 'イザナミは', 'くにを うみ', 'かみがみを', 'うんだ。', '',
+   'よみのくにの', 'わかれの のち', 'イザナギは', 'みそぎをして',
+   'アマテラス', 'ツクヨミ', 'スサノオの', 'みはしらが', 'うまれた。'].join('\n'),
+  ['アマテラスの', 'ちすじは', 'まご ニニギへ', 'うけつがれ', 'たかまがはら',
+   'から ひむかへ', 'あまくだった。', '',
+   'やまさちひこを', 'へて', 'かむやまと', 'いわれびこが',
+   'やまとを', 'ひらいた。', 'それが', 'じんむてんのう。'].join('\n'),
+  ['あらぶるかみ', 'スサノオは', 'やまたの', 'おろちを', 'たいじし',
+   'クシナダヒメと', 'むすばれた。', '',
+   'そのすえの', 'オオクニヌシは', 'こころみを', 'のりこえて',
+   'くにを きずき', 'のちに', 'あまつかみへ', 'くにを', 'ゆずりわたした。'].join('\n'),
+  ['これが', 'かみがたりの', 'ものがたり。', '',
+   'ふることぶみ', '（古事記）は', 'いまも', 'かたりつがれて', 'いる。', '',
+   '―― おわり'].join('\n'),
+];
+const ENDING_LINES_PER_PAGE = 5;
 
 function createHero(tx, ty) {
   return {
@@ -49,7 +72,7 @@ function main() {
 
   const state = {
     ...initial,
-    mode: 'title', // title/field/msg/quiz/battle/menu
+    mode: 'title', // title/field/msg/quiz/battle/menu/ending
     hero: createHero(initial.pos.x, initial.pos.y),
     animTick: 0,
     returnPos: null,   // 戦闘敗北時に戻すフィールド上の位置
@@ -57,7 +80,8 @@ function main() {
     msg: null,         // フィールド会話用MessageBox
     quiz: null,        // { data, id, win, phase: 'ask'|'result', resultMsg }
     battle: null,      // { data, id, phase: 'command'|'item'|'log', cmdWin, itemWin, logBox }
-    menu: null,        // { section: 'root'|'power'|'book'|'detail', rootWin, bookWin, detailText }
+    menu: null,        // { section: 'root'|'power'|'tab'|'list'|'detail', rootWin, tabWin, bookWin, bookIds, detailBox }
+    ending: null,      // { stage, box } 真エンディング（神々の系譜、Z送り4段階）
     title: createChoiceWindow(hasSave ? ['はじめから', 'つづきから'] : ['はじめから']),
   };
 
@@ -111,12 +135,53 @@ function main() {
       };
       state.mode = 'battle';
     } else {
-      // イベント完了：state.posはwarpで既に更新済みのはずなのでheroを合わせ、オートセーブする
+      // イベント完了：state.posはwarpで既に更新済みのはずなのでheroを合わせる
       state.activeEvent = null;
-      state.mode = 'field';
       syncHeroToPos();
+      // 第8章クイズクリアのイベントdone時、玉が8個そろっていれば真エンディングへ
+      // （ending_seenで一度きりに限定：以後どのイベントが終わっても再突入しない）
+      const triggerEnding = state.orbs >= 8 && !hasFlag(state, 'ending_seen');
+      if (triggerEnding) setFlag(state, 'ending_seen');
       saveGame(state, localStorage);
+      if (triggerEnding) beginEnding();
+      else state.mode = 'field';
     }
+  }
+
+  // ── ending：神々の系譜をZ送りで4段階表示→タイトルへ戻る ──
+  function beginEnding() {
+    state.ending = { stage: 0, box: createMessageBox(ENDING_STAGES[0], { linesPerPage: ENDING_LINES_PER_PAGE }) };
+    state.mode = 'ending';
+  }
+
+  function updateEnding() {
+    const ending = state.ending;
+    tickMessageBox(ending.box);
+    if (input.consume('z')) {
+      const more = advanceMessageBox(ending.box);
+      if (more) return;
+      const nextStage = ending.stage + 1;
+      if (nextStage < ENDING_STAGES.length) {
+        ending.stage = nextStage;
+        ending.box = createMessageBox(ENDING_STAGES[nextStage], { linesPerPage: ENDING_LINES_PER_PAGE });
+      } else {
+        state.ending = null;
+        backToTitle();
+      }
+    }
+  }
+
+  function drawEnding() {
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, 256, 224);
+    drawMessageBox(ctx, state.ending.box, 8, 32, 240, 152);
+  }
+
+  // タイトル画面へ戻す（エンディング後）。オートセーブ済みなので「つづきから」が選べる。
+  function backToTitle() {
+    const hasSaveNow = loadGame(localStorage) !== null;
+    state.title = createChoiceWindow(hasSaveNow ? ['はじめから', 'つづきから'] : ['はじめから']);
+    state.mode = 'title';
   }
 
   function startQuizQuestion() {
@@ -138,8 +203,10 @@ function main() {
     state.menu = {
       section: 'root',
       rootWin: createChoiceWindow(['つよさ', 'たびのしょ', 'とじる']),
+      tabWin: null,
       bookWin: null,
-      detailText: null,
+      bookIds: null,   // m.bookWin.items（もどる含む）に対応するCODEXのid配列
+      detailBox: null,
     };
     state.mode = 'menu';
   }
@@ -301,10 +368,13 @@ function main() {
   function drawQuiz() {
     const quiz = state.quiz;
     const q = quiz.question; // quiz.data.indexは正解直後に進んでしまうため使わない
-    drawWindow(ctx, 8, 8, 240, 36);
-    drawText(ctx, q.q, 14, 16);
+    // 長い問題文は折り返す：linesPerPageを十分大きくとり1ページにまとめて全行を描画する
+    const qLines = paginateText(q.q, 12, 99)[0];
+    const qh = 16 + qLines.length * 18;
+    drawWindow(ctx, 8, 8, 240, qh);
+    qLines.forEach((line, i) => drawText(ctx, line, 14, 16 + i * 18));
     if (quiz.phase === 'ask') {
-      drawChoiceWindow(ctx, quiz.win, 8, 52, 240, 22 * q.choices.length + 16);
+      drawChoiceWindow(ctx, quiz.win, 8, 8 + qh + 8, 240, 22 * q.choices.length + 16);
     } else {
       drawMessageBox(ctx, quiz.resultMsg, 8, 156, 240, 60);
     }
@@ -399,29 +469,49 @@ function main() {
         const cur = m.rootWin.cursor;
         if (cur === 0) { m.section = 'power'; }
         else if (cur === 1) {
-          const labels = state.codex.length > 0
-            ? state.codex.map((id) => CODEX.find((c) => c.id === id)?.name || id)
-            : ['まだ なし'];
-          m.bookWin = createChoiceWindow(labels);
-          m.section = 'book';
+          m.tabWin = createChoiceWindow([...CODEX_CATEGORIES, 'もどる']);
+          m.section = 'tab';
         } else { state.menu = null; state.mode = 'field'; }
       }
     } else if (m.section === 'power') {
       if (input.consume('x') || input.consume('z')) m.section = 'root';
-    } else if (m.section === 'book') {
-      if (input.consume('ArrowUp')) moveChoiceCursor(m.bookWin, -1);
-      else if (input.consume('ArrowDown')) moveChoiceCursor(m.bookWin, 1);
+    } else if (m.section === 'tab') {
+      // カテゴリ（かみ・ちめい・ことば）タブ：選ぶとそのカテゴリの一覧へ
+      if (input.consume('ArrowUp')) moveChoiceCursor(m.tabWin, -1);
+      else if (input.consume('ArrowDown')) moveChoiceCursor(m.tabWin, 1);
       else if (input.consume('x')) { m.section = 'root'; }
       else if (input.consume('z')) {
-        if (state.codex.length > 0) {
-          const id = state.codex[m.bookWin.cursor];
-          const entry = CODEX.find((c) => c.id === id);
-          m.detailText = entry ? `${entry.name}\n${entry.desc}` : '';
-          m.section = 'detail';
-        }
+        const cur = m.tabWin.cursor;
+        if (cur === CODEX_CATEGORIES.length) { m.section = 'root'; return; } // もどる
+        const category = CODEX_CATEGORIES[cur];
+        const entries = CODEX.filter((c) => c.category === category);
+        m.bookIds = entries.map((c) => c.id);
+        // 未発見（state.codexに未登録）は名前を伏せて「？？？」と表示する
+        const labels = entries.map((c) => (state.codex.includes(c.id) ? c.name : '？？？'));
+        m.bookWin = createChoiceWindow([...labels, 'もどる']);
+        m.section = 'list';
+      }
+    } else if (m.section === 'list') {
+      if (input.consume('ArrowUp')) moveChoiceCursor(m.bookWin, -1);
+      else if (input.consume('ArrowDown')) moveChoiceCursor(m.bookWin, 1);
+      else if (input.consume('x')) { m.section = 'tab'; }
+      else if (input.consume('z')) {
+        const cur = m.bookWin.cursor;
+        if (cur === m.bookIds.length) { m.section = 'tab'; return; } // もどる
+        const id = m.bookIds[cur];
+        if (!state.codex.includes(id)) return; // 未発見の項目は開けない
+        const entry = CODEX.find((c) => c.id === id);
+        const text = `${entry.name}\n\n${entry.desc}\n\n『${entry.excerpt}』\n\n（${entry.source}）`;
+        m.detailBox = createMessageBox(text, { linesPerPage: 7 });
+        m.section = 'detail';
       }
     } else if (m.section === 'detail') {
-      if (input.consume('x') || input.consume('z')) m.section = 'book';
+      tickMessageBox(m.detailBox);
+      if (input.consume('x')) { m.section = 'list'; }
+      else if (input.consume('z')) {
+        const more = advanceMessageBox(m.detailBox);
+        if (!more) m.section = 'list';
+      }
     }
   }
 
@@ -435,11 +525,13 @@ function main() {
       drawText(ctx, 'もちもの：', 14, 38);
       drawText(ctx, state.items.length > 0 ? state.items.join('・') : 'なし', 14, 58);
       drawText(ctx, '（ZかXで もどる）', 14, 80);
-    } else if (m.section === 'book') {
-      drawChoiceWindow(ctx, m.bookWin, 8, 8, 240, 22 * m.bookWin.items.length + 16);
+    } else if (m.section === 'tab') {
+      drawChoiceWindow(ctx, m.tabWin, 140, 8, 108, 22 * m.tabWin.items.length + 16);
+    } else if (m.section === 'list') {
+      const visibleCount = Math.min(m.bookWin.items.length, BOOK_LIST_VISIBLE);
+      drawChoiceWindow(ctx, m.bookWin, 8, 8, 240, 22 * visibleCount + 16, 22, BOOK_LIST_VISIBLE);
     } else if (m.section === 'detail') {
-      drawWindow(ctx, 8, 8, 240, 92);
-      (m.detailText || '').split('\n').forEach((line, i) => drawText(ctx, line, 14, 16 + i * 22));
+      drawMessageBox(ctx, m.detailBox, 8, 8, 240, 176);
     }
   }
 
@@ -449,6 +541,15 @@ function main() {
       // updateTitleがこのフレーム内でmode:'field'へ遷移させ、
       // state.titleをnullにすることがあるため、遷移後はdrawTitleを呼ばない
       if (state.mode === 'title') drawTitle();
+      requestAnimationFrame(loop);
+      return;
+    }
+
+    if (state.mode === 'ending') {
+      updateEnding();
+      // updateEnding中に最終段まで進み、同フレームでtitleへ遷移してstate.endingが
+      // nullになることがあるため、遷移後はdrawEndingを呼ばない
+      if (state.mode === 'ending') drawEnding();
       requestAnimationFrame(loop);
       return;
     }
@@ -473,7 +574,6 @@ function main() {
       updateMenu();
       if (state.menu) drawMenu();
     }
-    // ending は未実装（今後のタスクで追加）
     requestAnimationFrame(loop);
   }
 
