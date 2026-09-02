@@ -54,7 +54,7 @@ export const WORLD = {
     {
       x: 16, y: 9, requires: 'ch4_clear',
       lockedMsg: 'しろうさぎの なきごえが きこえるが、まだ すすめない…',
-      event: [{ warp: { map: 'ch5', x: 8, y: 10, dir: 'up' } }],
+      event: [{ warp: { map: 'ch5', x: 6, y: 1, dir: 'up' } }],
     },
     // ch6 くにゆずり（いなさのはま）
     {
