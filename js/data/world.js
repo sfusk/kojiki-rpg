@@ -72,7 +72,7 @@ export const WORLD = {
     {
       x: 9, y: 6, requires: 'ch7_clear',
       lockedMsg: 'とおくに やまとの くにが みえるが、みちは まだ とざされている…',
-      event: [{ warp: { map: 'ch8', x: 8, y: 10, dir: 'up' } }],
+      event: [{ warp: { map: 'ch8', x: 7, y: 9, dir: 'up' } }],
     },
   ],
 };
