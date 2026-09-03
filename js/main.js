@@ -8,14 +8,14 @@ import { createState, hasFlag, setFlag } from './engine/flags.js';
 import { startEvent, stepEvent } from './engine/events.js';
 import { createQuiz, answerQuiz } from './engine/quiz.js';
 import { createBattle, battleAct } from './engine/battle.js';
-import { saveGame, loadGame } from './engine/save.js';
+import { saveGame, loadGame, KEY as SAVE_KEY } from './engine/save.js';
 import { createAudio } from './engine/audio.js';
 import { VERSION } from './data/version.js';
 import { CHAPTERS } from './data/chapters/index.js';
 import { BOSSES } from './data/bosses.js';
 import { CODEX } from './data/codexData.js';
 import {
-  drawWindow, drawText, drawMessageBox, drawChoiceWindow,
+  FONT, drawWindow, drawText, drawMessageBox, drawChoiceWindow,
   createMessageBox, advanceMessageBox, tickMessageBox,
   createChoiceWindow, moveChoiceCursor, paginateText,
 } from './engine/window.js';
@@ -26,6 +26,7 @@ import {
   POWER_FOOTER_GAP, powerWinHeight,
 } from './data/uiLayout.js';
 
+const GAME_TITLE = 'RPG古事記';
 const TWEEN_FRAMES = 8; // 1タイル移動にかけるフレーム数
 const FADE_FRAMES = 30; // マップ遷移後のフェードイン所要フレーム数
 const DEFAULT_LOCKED_MSG = '…'; // requires未達成時、lockedMsg省略時のメッセージ
@@ -267,7 +268,7 @@ function main() {
       } else {
         // はじめから：セーブデータと状態を初期化する（真エンディング後もここから周回できるように）
         Object.assign(state, createState());
-        localStorage.removeItem('kamugatari_save');
+        localStorage.removeItem(SAVE_KEY);
       }
       syncHeroToPos();
       state.title = null;
@@ -280,7 +281,12 @@ function main() {
   function drawTitle() {
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, 256, 224);
-    drawText(ctx, 'かむがたり', 92, 60);
+    // 半角と全角が混在するため実測して中央に置く
+    ctx.save();
+    ctx.font = FONT;
+    const titleW = ctx.measureText(GAME_TITLE).width;
+    ctx.restore();
+    drawText(ctx, GAME_TITLE, (256 - titleW) / 2, 60);
     drawChoiceWindow(ctx, state.title, 70, 100, 116, 22 * state.title.items.length + 16);
     // ビルド識別子：古いキャッシュを掴んでいないかの目視確認用
     ctx.save();

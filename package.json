@@ -2,7 +2,7 @@
   "name": "kojiki-rpg",
   "version": "1.0.0",
   "type": "module",
-  "description": "古事記RPG かむがたり",
+  "description": "RPG古事記 — 古事記をたどる体験学習RPG",
   "main": "js/main.js",
   "scripts": {
     "test": "vitest run",

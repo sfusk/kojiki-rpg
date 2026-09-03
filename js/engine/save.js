@@ -1,4 +1,6 @@
-const KEY = 'kamugatari_save';
+// ゲーム名を「RPG古事記」に改めた後もキーは旧名のまま据え置く。
+// 変更すると既存のセーブデータが読めなくなるため（改名は表示名だけの変更に留める）。
+export const KEY = 'kamugatari_save';
 export function serialize(state) { return JSON.stringify(state); }
 export function deserialize(json) {
   try {
