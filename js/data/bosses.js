@@ -1,6 +1,7 @@
 export const BOSSES = {
+  // escape: true は「倒す相手ではなく逃げ切る相手」。桃でひるませてから「にげる」で勝ち。
   yomotsu: { id: 'yomotsu', name: 'よもつしこめ', maxHp: 999, atk: 3,
-    gimmickItem: '桃の実', gimmickMsg: '桃の力でしこめは\nひるんだ！',
+    gimmickItem: '桃の実', gimmickMsg: '桃の力でしこめは\nひるんだ！\n今のうちに\n「にげる」のだ！',
     hint: 'イザナギは桃を\n投げて逃げたという…', escape: true },
   orochi: { id: 'orochi', name: 'ヤマタノオロチ', maxHp: 30, atk: 4,
     gimmickItem: '八塩折の酒', gimmickMsg: 'オロチは八塩折の\n酒を飲み干し\n眠ってしまった！',

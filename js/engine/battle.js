@@ -11,6 +11,8 @@ export function battleAct(b, cmd, itemId) {
     b.bossHp -= dmg;
     b.log.push(`旅人の攻撃！\n${dmg}のダメージ！`);
     if (!b.gimmickDone) b.log.push('しかしほとんど\n効いていない…');
+    // 逃げ切る相手を攻撃し続けても勝てないので、その場で行動を示す
+    else if (b.boss.escape) b.log.push('この相手は\n倒しきれない！\n「にげる」のだ！');
   } else if (cmd === 'item') {
     if (itemId === b.boss.gimmickItem && !b.gimmickDone) {
       b.gimmickDone = true; b.log.push(b.boss.gimmickMsg);
@@ -21,6 +23,8 @@ export function battleAct(b, cmd, itemId) {
       b.log.push('うまく逃げきった！'); return b;
     }
     b.log.push('回り込まれてしまった！');
+    // 逃げ損ねたときは何が足りないかを示す（手ぶらで逃げ続ける詰まりを防ぐ）
+    if (b.boss.escape && !b.gimmickDone && b.boss.hint) b.log.push(b.boss.hint);
   } else acted = false;
   if (b.bossHp <= 0) { b.over = true; b.result = 'win';
     b.log.push(`${b.boss.name}を\n倒した！`); return b; }

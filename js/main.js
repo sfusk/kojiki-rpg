@@ -514,7 +514,9 @@ function main() {
     const b = state.battle;
     drawWindow(ctx, 8, 8, 240, 36);
     drawText(ctx, `${b.data.boss.name}`, 14, 12);
-    drawText(ctx, `敵 HP:${Math.max(b.data.bossHp, 0)}`, 14, 30);
+    // 逃げ切る相手はHPを伏せる（数値が見えると削り倒せる相手だと誤解させるため）
+    const bossHpText = b.data.boss.escape ? '？？？' : `${Math.max(b.data.bossHp, 0)}`;
+    drawText(ctx, `敵 HP:${bossHpText}`, 14, 30);
     drawWindow(ctx, 8, 116, 240, 24);
     drawText(ctx, `旅人 HP:${Math.max(b.data.playerHp, 0)}`, 14, 122);
 
