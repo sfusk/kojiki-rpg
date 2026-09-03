@@ -21,6 +21,32 @@ export function battleItemWinHeight(itemCount) {
   return BATTLE_ITEM_LINE_H * Math.min(itemCount, BATTLE_ITEM_MAX_VISIBLE) + BATTLE_ITEM_PAD;
 }
 
+// ── クイズ画面 ───────────────────────────────────────────
+// 選択肢にふりがなを添えるぶん行間を広げる。問題文は最大4行になるため、
+// 問題文の窓＋選択肢の窓が画面下端（SCREEN_H）を越えないことをテストで保証する。
+export const QUIZ_WIN_X = 8;
+export const QUIZ_WIN_Y = 8;
+export const QUIZ_WIN_W = 240;
+export const QUIZ_Q_LINE_H = 18;      // 問題文の行間
+export const QUIZ_Q_PAD = 16;         // 問題文の窓の上下余白
+export const QUIZ_GAP = 8;            // 問題文の窓と選択肢の窓の間隔
+export const QUIZ_CHOICE_LINE_H = 26; // 選択肢の行間（ふりがなのぶん広め）
+export const QUIZ_CHOICE_PAD = 25;    // 選択肢の窓の上下余白（1行目のふりがなのぶん含む）
+
+export function quizQuestionWinHeight(lineCount) {
+  return QUIZ_Q_PAD + lineCount * QUIZ_Q_LINE_H;
+}
+
+export function quizChoiceWinHeight(choiceCount) {
+  return QUIZ_CHOICE_LINE_H * choiceCount + QUIZ_CHOICE_PAD;
+}
+
+// 選択肢の窓の下端（画面内に収まるかの判定に使う）
+export function quizBottom(questionLineCount, choiceCount) {
+  const qh = quizQuestionWinHeight(questionLineCount);
+  return QUIZ_WIN_Y + qh + QUIZ_GAP + quizChoiceWinHeight(choiceCount);
+}
+
 // ── メニュー最初の画面の地名ウィンドウ ─────────────────────
 // 右側の選択肢ウィンドウ（x=140〜248）と重ならない幅に収める。
 // 章題は「第一章 オノゴロ島」のように空白で章と地名に分かれるため、

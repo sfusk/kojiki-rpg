@@ -13,7 +13,9 @@ const TICK_MS = 100;       // スケジューラーの起床間隔
 export function createAudio() {
   let ctx = null;
   let master = null;
-  let current = null; // 再生中BGM { name, timer, tracks: [{i, t}] }
+  let current = null;      // 再生中BGM { name, timer, tracks: [{i, t}] }
+  let enabled = true;      // BGMを鳴らすか（メニューから切り替える）
+  let lastRequested = null; // 消音中に要求された曲。再開時にこれを鳴らす
 
   function ensureCtx() {
     if (typeof window === 'undefined') return null;
@@ -131,6 +133,8 @@ export function createAudio() {
 
   // ループBGM：TICK_MSごとに起きて、現在時刻+LOOKAHEAD_SECまでの音を先行予約する
   function playBgm(name) {
+    lastRequested = name; // 消音中でも「今どの曲であるべきか」は覚えておく
+    if (!enabled) return;
     if (!ensureCtx()) return;
     if (current && current.name === name) return; // 同じ曲なら鳴らし直さない
     stopBgm();
@@ -165,6 +169,7 @@ export function createAudio() {
   }
 
   function playSfx(name) {
+    if (!enabled) return;
     if (!ensureCtx()) return;
     const now = ctx.currentTime;
     if (name === 'warp') {
@@ -191,5 +196,28 @@ export function createAudio() {
     ensureCtx();
   }
 
-  return { playBgm, stopBgm, playSfx, unlock };
+  function isEnabled() {
+    return enabled;
+  }
+
+  // BGMの入切。切ったら即座に止め、入れたら本来鳴っているはずの曲を再開する
+  function setEnabled(next) {
+    enabled = next;
+    if (!enabled) {
+      stopBgm();
+      return;
+    }
+    if (lastRequested) {
+      const name = lastRequested;
+      current = null; // 同じ曲でも鳴らし直せるようにする
+      playBgm(name);
+    }
+  }
+
+  function toggle() {
+    setEnabled(!enabled);
+    return enabled;
+  }
+
+  return { playBgm, stopBgm, playSfx, unlock, isEnabled, setEnabled, toggle };
 }

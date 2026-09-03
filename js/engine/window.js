@@ -3,6 +3,8 @@
 // paginateText/moveCursor/create*/advance*等は状態計算のみを行う純粋関数（DOM非依存・テスト対象）。
 
 export const FONT = "16px 'ＭＳ ゴシック', monospace";
+export const RUBY_FONT = "8px 'ＭＳ ゴシック', monospace"; // ふりがな用
+export const RUBY_OFFSET_Y = 9; // 本文の上端から何px上にふりがなを描くか
 const RADIUS = 6; // ウィンドウ角丸半径
 
 // 黒地・白枠2px・角丸のウィンドウを描画する
@@ -34,6 +36,17 @@ export function drawText(ctx, text, x, y) {
   ctx.fillStyle = '#fff';
   ctx.textBaseline = 'top';
   ctx.fillText(text, x, y);
+  ctx.restore();
+}
+
+// 本文の上に小さくふりがなを描く。本文の中央に揃える。
+export function drawRuby(ctx, ruby, x, y, baseWidth) {
+  ctx.save();
+  ctx.font = RUBY_FONT;
+  ctx.fillStyle = '#fff';
+  ctx.textBaseline = 'top';
+  const rubyWidth = ctx.measureText(ruby).width;
+  ctx.fillText(ruby, x + (baseWidth - rubyWidth) / 2, y - RUBY_OFFSET_Y);
   ctx.restore();
 }
 
@@ -119,7 +132,8 @@ export function moveChoiceCursor(win, delta) {
 
 // maxVisible省略時は全項目を描画（従来どおり）。指定時はカーソルが常に見えるよう
 // スクロールし、隠れている項目があれば上下に▲▼を出す（旅の書のような長い一覧向け）。
-export function drawChoiceWindow(ctx, win, x, y, w, h, lineHeight = 22, maxVisible) {
+// rubyOf に「語→読み」を返す関数を渡すと、読みのある項目にふりがなを添える。
+export function drawChoiceWindow(ctx, win, x, y, w, h, lineHeight = 22, maxVisible, rubyOf) {
   drawWindow(ctx, x, y, w, h);
   const count = win.items.length;
   const visible = maxVisible && count > maxVisible ? maxVisible : count;
@@ -127,11 +141,22 @@ export function drawChoiceWindow(ctx, win, x, y, w, h, lineHeight = 22, maxVisib
   if (maxVisible && count > maxVisible) {
     start = Math.min(Math.max(win.cursor - Math.floor(maxVisible / 2), 0), count - maxVisible);
   }
+  // ふりがなを出すときは1行目の読みが枠の外へ出ないよう上に余白を足す
+  const topPad = rubyOf ? 10 + RUBY_OFFSET_Y : 10;
   for (let row = 0; row < visible; row++) {
     const i = start + row;
-    const ly = y + 10 + row * lineHeight;
+    const ly = y + topPad + row * lineHeight;
     if (i === win.cursor) drawText(ctx, '▶', x + 8, ly);
-    drawText(ctx, String(win.items[i]), x + 28, ly);
+    const label = String(win.items[i]);
+    drawText(ctx, label, x + 28, ly);
+    const ruby = rubyOf && rubyOf(label);
+    if (ruby) {
+      ctx.save();
+      ctx.font = FONT;
+      const labelWidth = ctx.measureText(label).width;
+      ctx.restore();
+      drawRuby(ctx, ruby, x + 28, ly, labelWidth);
+    }
   }
   if (maxVisible && count > maxVisible) {
     if (start > 0) drawText(ctx, '▲', x + w - 20, y - 2);

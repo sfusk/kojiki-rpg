@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { serialize, deserialize, saveGame, loadGame } from '../js/engine/save.js';
+import {
+  serialize, deserialize, saveGame, loadGame,
+  saveSettings, loadSettings, KEY, SETTINGS_KEY,
+} from '../js/engine/save.js';
 import { createState, setFlag, addItem } from '../js/engine/flags.js';
 
 function fakeStorage() {
@@ -23,4 +26,40 @@ describe('セーブ', () => {
     expect(loadGame(st)).toEqual(s);
   });
   it('セーブがないときloadGameはnull', () => expect(loadGame(fakeStorage())).toBeNull());
+});
+
+describe('設定の保存', () => {
+  // localStorage の代わりに使う最小限のモック
+  const makeStorage = (initial = {}) => {
+    const data = { ...initial };
+    return {
+      getItem: (k) => (k in data ? data[k] : null),
+      setItem: (k, v) => { data[k] = String(v); },
+      removeItem: (k) => { delete data[k]; },
+      _data: data,
+    };
+  };
+
+  it('保存が無いときは音楽ONが既定値', () => {
+    expect(loadSettings(makeStorage())).toEqual({ bgm: true });
+  });
+
+  it('保存した設定を読み戻せる', () => {
+    const st = makeStorage();
+    saveSettings({ bgm: false }, st);
+    expect(loadSettings(st)).toEqual({ bgm: false });
+  });
+
+  it('壊れた設定は既定値に落とす', () => {
+    expect(loadSettings(makeStorage({ [SETTINGS_KEY]: '{壊れた' }))).toEqual({ bgm: true });
+    expect(loadSettings(makeStorage({ [SETTINGS_KEY]: 'null' }))).toEqual({ bgm: true });
+    expect(loadSettings(makeStorage({ [SETTINGS_KEY]: '{"bgm":"はい"}' }))).toEqual({ bgm: true });
+  });
+
+  it('設定はセーブデータとは別のキーに保存する', () => {
+    const st = makeStorage();
+    saveSettings({ bgm: false }, st);
+    expect(st.getItem(KEY)).toBeNull();
+    expect(st.getItem(SETTINGS_KEY)).not.toBeNull();
+  });
 });

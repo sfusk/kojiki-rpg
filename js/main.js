@@ -8,7 +8,10 @@ import { createState, hasFlag, setFlag } from './engine/flags.js';
 import { startEvent, stepEvent } from './engine/events.js';
 import { createQuiz, answerQuiz } from './engine/quiz.js';
 import { createBattle, battleAct } from './engine/battle.js';
-import { saveGame, loadGame, KEY as SAVE_KEY } from './engine/save.js';
+import {
+  saveGame, loadGame, KEY as SAVE_KEY,
+  saveSettings as persistSettings, loadSettings,
+} from './engine/save.js';
 import { createAudio } from './engine/audio.js';
 import { VERSION } from './data/version.js';
 import { CHAPTERS } from './data/chapters/index.js';
@@ -25,7 +28,10 @@ import {
   POWER_WIN_X, POWER_WIN_Y, POWER_WIN_W, POWER_ITEM_START_Y, POWER_ITEM_LINE_H,
   POWER_LOCATION_Y, POWER_ORB_Y, POWER_ITEMS_LABEL_Y,
   POWER_FOOTER_GAP, powerWinHeight,
+  QUIZ_WIN_X, QUIZ_WIN_Y, QUIZ_WIN_W, QUIZ_Q_LINE_H, QUIZ_GAP, QUIZ_CHOICE_LINE_H,
+  quizQuestionWinHeight, quizChoiceWinHeight,
 } from './data/uiLayout.js';
+import { readingOf } from './data/readings.js';
 
 const GAME_TITLE = 'RPG古事記';
 const TWEEN_FRAMES = 8; // 1タイル移動にかけるフレーム数
@@ -83,6 +89,12 @@ function main() {
   const input = createInput(window);
   const renderer = createRenderer(ctx, sprites, tiles);
   const audio = createAudio();
+  // 音楽の入切は前回の選択を引き継ぐ
+  audio.setEnabled(loadSettings(localStorage).bgm);
+
+  function saveSettings() {
+    persistSettings({ bgm: audio.isEnabled() }, localStorage);
+  }
 
   const initial = createState();
   const hasSave = loadGame(localStorage) !== null;
@@ -241,10 +253,15 @@ function main() {
     battle.phase = 'log';
   }
 
+  // BGM項目のラベルは現在の状態を表す（押すと切り替わる）
+  function bgmLabel() {
+    return audio.isEnabled() ? '音楽：入' : '音楽：切';
+  }
+
   function openMenu() {
     state.menu = {
       section: 'root',
-      rootWin: createChoiceWindow(['つよさ', '旅の書', 'とじる']),
+      rootWin: createChoiceWindow(['つよさ', '旅の書', bgmLabel(), 'とじる']),
       tabWin: null,
       bookWin: null,
       bookIds: null,   // m.bookWin.items（もどる含む）に対応するCODEXのid配列
@@ -482,11 +499,16 @@ function main() {
     const q = quiz.question; // quiz.data.indexは正解直後に進んでしまうため使わない
     // 長い問題文は折り返す：linesPerPageを十分大きくとり1ページにまとめて全行を描画する
     const qLines = paginateText(q.q, 12, 99)[0];
-    const qh = 16 + qLines.length * 18;
-    drawWindow(ctx, 8, 8, 240, qh);
-    qLines.forEach((line, i) => drawText(ctx, line, 14, 16 + i * 18));
+    const qh = quizQuestionWinHeight(qLines.length);
+    drawWindow(ctx, QUIZ_WIN_X, QUIZ_WIN_Y, QUIZ_WIN_W, qh);
+    qLines.forEach((line, i) => drawText(ctx, line, 14, 16 + i * QUIZ_Q_LINE_H));
     if (quiz.phase === 'ask') {
-      drawChoiceWindow(ctx, quiz.win, 8, 8 + qh + 8, 240, 22 * q.choices.length + 16);
+      // 難読な神器・地名にはふりがなを添える
+      drawChoiceWindow(
+        ctx, quiz.win, QUIZ_WIN_X, QUIZ_WIN_Y + qh + QUIZ_GAP, QUIZ_WIN_W,
+        quizChoiceWinHeight(q.choices.length),
+        QUIZ_CHOICE_LINE_H, undefined, readingOf,
+      );
     } else {
       drawMessageBox(ctx, quiz.resultMsg, 8, 156, 240, 60);
     }
@@ -592,6 +614,11 @@ function main() {
         else if (cur === 1) {
           m.tabWin = createChoiceWindow([...CODEX_CATEGORIES, 'もどる']);
           m.section = 'tab';
+        } else if (cur === 2) {
+          // 音楽の入切。カーソル位置は保ったままラベルだけ更新する
+          audio.toggle();
+          saveSettings();
+          m.rootWin.items[2] = bgmLabel();
         } else { state.menu = null; state.mode = 'field'; }
       }
     } else if (m.section === 'power') {
@@ -648,7 +675,7 @@ function main() {
         drawWindow(ctx, 8, 8, 124, 22 * lines.length + 14);
         lines.forEach((line, i) => drawText(ctx, line, 14, 16 + i * 22));
       }
-      drawChoiceWindow(ctx, m.rootWin, 140, 8, 108, 74);
+      drawChoiceWindow(ctx, m.rootWin, 140, 8, 108, 22 * m.rootWin.items.length + 16);
     } else if (m.section === 'power') {
       const lines = state.items.length > 0 ? state.items : ['なし'];
       const h = powerWinHeight(state.items.length);
