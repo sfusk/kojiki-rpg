@@ -100,6 +100,7 @@ export const CH6 = {
   triggers: [
     {
       x: 6, y: 4,
+      sparkle: 'ch6_yuzuri',
       requires: 'ch6_chikara',
       lockedMsg: 'タケミナカタの\n決着を見届けて\nいない…',
       event: [

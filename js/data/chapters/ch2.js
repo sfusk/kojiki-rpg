@@ -97,11 +97,17 @@ export const CH2 = {
   triggers: [
     {
       x: 7, y: 4,
+      sparkle: 'ch2_momo',
       event: [
-        { msg: '坂もとに桃の木がある。' },
-        { msg: '実を三つもいだ。' },
-        { give: '桃の実' },
-        { codex: 'momo' },
+        { if: 'ch2_momo',
+          then: [{ msg: '桃の木が\n静かに立っている。' }],
+          else: [
+            { msg: '坂もとに桃の木がある。' },
+            { msg: '実を三つもいだ。' },
+            { give: '桃の実' },
+            { codex: 'momo' },
+            { set: 'ch2_momo' },
+          ] },
       ],
     },
     {

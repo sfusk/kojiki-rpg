@@ -33,7 +33,27 @@ function tileSpriteName(ch, animFrame) {
   return ch;
 }
 
-export function drawField(r, map, state, npcs = []) {
+// 未発動イベントの目印。ゆっくり明滅する光の粒を地面に置く。
+// 一度その出来事を見届けると（フラグが立つと）呼び出し側が渡さなくなるので消える。
+const SPARKLE_CYCLE = 72; // 明滅の周期（フレーム）
+
+function drawSparkle(ctx, sx, sy, tick) {
+  const phase = ((tick % SPARKLE_CYCLE) / SPARKLE_CYCLE) * Math.PI * 2;
+  const pulse = 0.5 + 0.5 * Math.sin(phase);
+  const cx = sx + TILE / 2;
+  const cy = sy + TILE / 2;
+  const arm = 2.5 + pulse * 2.5; // 光条の長さ
+  ctx.save();
+  ctx.globalAlpha = 0.5 + pulse * 0.5;
+  ctx.fillStyle = '#ffe98a';
+  ctx.fillRect(cx - 0.5, cy - arm, 1, arm * 2); // 縦の光条
+  ctx.fillRect(cx - arm, cy - 0.5, arm * 2, 1); // 横の光条
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(cx - 1, cy - 1, 2, 2); // 中心の粒
+  ctx.restore();
+}
+
+export function drawField(r, map, state, npcs = [], sparkles = []) {
   const { ctx, sprites, tiles } = r;
   const { hero } = state;
 
@@ -70,6 +90,11 @@ export function drawField(r, map, state, npcs = []) {
         ctx.fillRect(sx, sy, TILE, TILE);
       }
     }
+  }
+
+  // 目印の光（地面の上、キャラクターの下に描く）
+  for (const sp of sparkles) {
+    drawSparkle(ctx, sp.x * TILE - camX, sp.y * TILE - camY, state.animTick || 0);
   }
 
   // NPC描画（タイル座標。スプライトは `${name}_${frame}`）

@@ -113,6 +113,7 @@ export const CH5 = {
   triggers: [
     {
       x: 10, y: 9,
+      sparkle: 'ch5_trial',
       requires: 'ch5_usagi',
       lockedMsg: 'まだ白兎のことを\n見届けていない…',
       event: [

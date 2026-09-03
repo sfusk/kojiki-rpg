@@ -79,6 +79,7 @@ export const CH1 = {
   triggers: [
     {
       x: 8, y: 3,
+      sparkle: 'ch1_ritual',
       event: [
         { if: 'ch1_ritual',
           then: [{ msg: '次々と島々が\n生まれていった。' }],

@@ -89,6 +89,7 @@ export const CH3 = {
   triggers: [
     {
       x: 5, y: 3,
+      sparkle: 'ch3_misogi',
       event: [
         { if: 'ch3_misogi',
           then: [{ msg: '川は静かに流れている。' }],
@@ -111,6 +112,7 @@ export const CH3 = {
     },
     {
       x: 12, y: 2,
+      sparkle: 'ch3_iwato',
       requires: 'ch3_misogi',
       lockedMsg: '岩戸は固く\n閉ざされている…',
       event: [

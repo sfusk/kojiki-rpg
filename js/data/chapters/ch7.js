@@ -108,6 +108,7 @@ export const CH7 = {
   triggers: [
     {
       x: 4, y: 2,
+      sparkle: 'ch7_kourin',
       event: [
         { if: 'ch7_kourin',
           then: [{ msg: '高千穂の風が強く吹く。' }],

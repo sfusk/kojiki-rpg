@@ -328,6 +328,17 @@ function main() {
     ctx.restore();
   }
 
+  // まだ見届けていないイベントの位置を返す（地面に光の目印を出すため）。
+  // 条件（requires）を満たしていないものは出さない。満たした時に新しく光ることで
+  // 「次はここへ」という道しるべになる。
+  function pendingSparkles(chapter) {
+    return (chapter.triggers || [])
+      .filter((tr) => tr.sparkle
+        && !hasFlag(state, tr.sparkle)
+        && (!tr.requires || hasFlag(state, tr.requires)))
+      .map((tr) => ({ x: tr.x, y: tr.y }));
+  }
+
   // ── field：移動＋前方インタラクト（NPC）＋踏むと発動（トリガー）──
   function frontTile(hero) {
     const { dx, dy } = DIRS[hero.dir];
@@ -727,7 +738,7 @@ function main() {
 
     const chapter = currentChapter();
     const drawNpcs = (chapter.npcs || []).map((n) => ({ name: n.sprite, x: n.x, y: n.y, frame: n.frame || 0 }));
-    drawField(renderer, chapter.map, state, drawNpcs);
+    drawField(renderer, chapter.map, state, drawNpcs, pendingSparkles(chapter));
 
     if (state.mode === 'field') {
       updateField();
