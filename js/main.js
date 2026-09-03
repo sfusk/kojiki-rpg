@@ -23,6 +23,7 @@ import {
   BATTLE_ITEM_WIN_X, BATTLE_ITEM_WIN_Y, BATTLE_ITEM_WIN_W, BATTLE_ITEM_LINE_H,
   BATTLE_ITEM_MAX_VISIBLE, battleItemWinHeight,
   POWER_WIN_X, POWER_WIN_Y, POWER_WIN_W, POWER_ITEM_START_Y, POWER_ITEM_LINE_H,
+  POWER_LOCATION_Y, POWER_ORB_Y, POWER_ITEMS_LABEL_Y,
   POWER_FOOTER_GAP, powerWinHeight,
 } from './data/uiLayout.js';
 
@@ -53,6 +54,10 @@ const ENDING_STAGES = [
    '―― 終わり'].join('\n'),
 ];
 const ENDING_LINES_PER_PAGE = 5;
+const STORY_LINES_PER_PAGE = 8; // 章の導入・締めの語り（全画面）に収める行数
+const LOCATION_SHOW_FRAMES = 180; // 現在地ラベルを出しておくフレーム数（約3秒）
+const LOCATION_FADE_FRAMES = 45;  // 消えぎわにフェードアウトを始めるフレーム数
+const LOCATION_FONT = "12px 'ＭＳ ゴシック', monospace";
 
 function createHero(tx, ty) {
   return {
@@ -97,6 +102,8 @@ function main() {
     battle: null,      // { data, id, phase: 'command'|'item'|'log', cmdWin, itemWin, logBox }
     menu: null,        // { section: 'root'|'power'|'tab'|'list'|'detail', rootWin, tabWin, bookWin, bookIds, detailBox }
     ending: null,      // { stage, box } 真エンディング（神々の系譜、Z送り4段階）
+    story: null,       // 章の導入・締めの語り（全画面テキスト、Z送り）
+    locationTimer: LOCATION_SHOW_FRAMES, // 現在地ラベルの残り表示フレーム数
     title: createChoiceWindow(hasSave ? ['はじめから', 'つづきから'] : ['はじめから']),
   };
 
@@ -144,6 +151,12 @@ function main() {
       state.quiz = { data: createQuiz(questions), id: r.id, phase: 'ask', win: null, question: null, result: null, resultMsg: null };
       startQuizQuestion();
       state.mode = 'quiz';
+    } else if (r.kind === 'story') {
+      // 章の導入・締め。テキストが未定義の章では黙って読み飛ばす
+      const text = (currentChapter() || {})[r.which];
+      if (!text) { advanceActiveEvent(); return; }
+      state.story = createMessageBox(text, { linesPerPage: STORY_LINES_PER_PAGE });
+      state.mode = 'story';
     } else if (r.kind === 'battle') {
       const boss = BOSSES[r.id];
       state.returnPos = { tx: state.hero.tx, ty: state.hero.ty, dir: state.hero.dir };
@@ -162,6 +175,7 @@ function main() {
       if (state.eventStartMap !== null && state.pos.map !== state.eventStartMap) {
         audio.playSfx('warp');
         state.fadeIn = FADE_FRAMES;
+        state.locationTimer = LOCATION_SHOW_FRAMES; // 新しい土地の名を出す
       }
       state.eventStartMap = null;
       syncHeroToPos();
@@ -368,6 +382,24 @@ function main() {
     }
   }
 
+  // ── story：章の導入・締めの語り（全画面・Z送り） ──────
+  function updateStory() {
+    tickMessageBox(state.story);
+    if (input.consume('z')) {
+      const more = advanceMessageBox(state.story);
+      if (!more) {
+        state.story = null;
+        advanceActiveEvent();
+      }
+    }
+  }
+
+  function drawStory() {
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, 256, 224);
+    drawMessageBox(ctx, state.story, 8, 16, 240, 192);
+  }
+
   // ── msg：フィールド会話（Z送り→イベント継続） ──────
   function updateMsg() {
     tickMessageBox(state.msg);
@@ -392,14 +424,28 @@ function main() {
     drawMessageBox(ctx, state.msg, 8, 156, 240, 60);
   }
 
-  // 現在地ラベル：フィールド探索中のみ左上に表示（章・場所がひと目でわかるように）
+  // 現在地ラベル：マップに入った直後だけ左上に小さく出し、数秒で消える。
+  // 常時表示だとフィールドが隠れるため。現在地はメニューの「つよさ」でいつでも確認できる。
   function drawLocationLabel() {
+    if (state.locationTimer <= 0) return;
     const chapter = currentChapter();
     const label = chapter.title || chapter.name || '';
     if (!label) return;
-    const w = label.length * 16 + 20;
-    drawWindow(ctx, 4, 4, w, 24);
-    drawText(ctx, label, 14, 8);
+    ctx.save();
+    ctx.font = LOCATION_FONT;
+    const textW = ctx.measureText(label).width;
+    ctx.restore();
+    // 消えぎわは薄くフェードアウトさせる
+    const alpha = Math.min(state.locationTimer / LOCATION_FADE_FRAMES, 1);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    drawWindow(ctx, 4, 4, textW + 16, 18);
+    ctx.font = LOCATION_FONT;
+    ctx.fillStyle = '#fff';
+    ctx.textBaseline = 'top';
+    ctx.fillText(label, 12, 8);
+    ctx.restore();
+    state.locationTimer--;
   }
 
   // ── quiz：問題文＋4択ChoiceWindow ───────────────────
@@ -598,8 +644,10 @@ function main() {
       const lines = state.items.length > 0 ? state.items : ['なし'];
       const h = powerWinHeight(state.items.length);
       drawWindow(ctx, POWER_WIN_X, POWER_WIN_Y, POWER_WIN_W, h);
-      drawText(ctx, `玉の数：${state.orbs}`, 14, 16);
-      drawText(ctx, '持ち物：', 14, 38);
+      const here = currentChapter();
+      drawText(ctx, `現在地：${here.title || here.name || ''}`, 14, POWER_LOCATION_Y);
+      drawText(ctx, `玉の数：${state.orbs}`, 14, POWER_ORB_Y);
+      drawText(ctx, '持ち物：', 14, POWER_ITEMS_LABEL_Y);
       lines.forEach((label, i) => drawText(ctx, label, 14, POWER_ITEM_START_Y + i * POWER_ITEM_LINE_H));
       const footerY = POWER_ITEM_START_Y + (lines.length - 1) * POWER_ITEM_LINE_H + POWER_ITEM_LINE_H + POWER_FOOTER_GAP;
       drawText(ctx, '（ZかXでもどる）', 14, footerY);
@@ -619,6 +667,15 @@ function main() {
       // updateTitleがこのフレーム内でmode:'field'へ遷移させ、
       // state.titleをnullにすることがあるため、遷移後はdrawTitleを呼ばない
       if (state.mode === 'title') drawTitle();
+      requestAnimationFrame(loop);
+      return;
+    }
+
+    // 章の語りはフィールドを描かず全画面で見せる（endingと同じ扱い）
+    if (state.mode === 'story') {
+      updateStory();
+      // updateStory中に語りが終わり、同フレームで別モードへ移ることがある
+      if (state.mode === 'story') drawStory();
       requestAnimationFrame(loop);
       return;
     }

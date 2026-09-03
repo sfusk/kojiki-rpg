@@ -26,7 +26,10 @@ export function battleItemWinHeight(itemCount) {
 export const POWER_WIN_X = 8;
 export const POWER_WIN_Y = 8;
 export const POWER_WIN_W = 240;
-export const POWER_ITEM_START_Y = 58;  // 絶対y座標：もちもの一覧の先頭行
+export const POWER_LOCATION_Y = 16;    // 絶対y座標：現在地
+export const POWER_ORB_Y = 38;         // 絶対y座標：玉の数
+export const POWER_ITEMS_LABEL_Y = 60; // 絶対y座標：「持ち物：」の見出し
+export const POWER_ITEM_START_Y = 80;  // 絶対y座標：もちもの一覧の先頭行
 export const POWER_ITEM_LINE_H = 16;
 export const POWER_FOOTER_GAP = 14;    // 最終アイテム行と「もどる」案内文の間隔
 

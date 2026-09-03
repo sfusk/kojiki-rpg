@@ -33,48 +33,48 @@ export const WORLD = {
   entry: { x: 11, y: 8 },
   triggers: [
     // ch1 オノゴロ島：requiresなし（さいしょから はいれる）
-    { x: 8, y: 12, event: [{ warp: { map: 'ch1', x: 7, y: 10, dir: 'up' } }] },
+    { x: 8, y: 12, event: [{ warp: { map: 'ch1', x: 7, y: 10, dir: 'up' } }, { story: 'prologue' }] },
     // ch2 よもつひらさか（洞窟口）
     {
       x: 5, y: 5, requires: 'ch1_clear',
       lockedMsg: '強い穢れを感じる。\nまだ入れない…',
-      event: [{ warp: { map: 'ch2', x: 8, y: 9, dir: 'up' } }],
+      event: [{ warp: { map: 'ch2', x: 8, y: 9, dir: 'up' } }, { story: 'prologue' }],
     },
     // ch3 たかまがはら（鳥居）
     {
       x: 17, y: 1, requires: 'ch2_clear',
       lockedMsg: '天の梯子は\nまだ下りてこない…',
-      event: [{ warp: { map: 'ch3', x: 7, y: 9, dir: 'up' } }],
+      event: [{ warp: { map: 'ch3', x: 7, y: 9, dir: 'up' } }, { story: 'prologue' }],
     },
     // ch4 いずも
     {
       x: 6, y: 9, requires: 'ch3_clear',
       lockedMsg: '川上から\n鳴き声が聞こえるが\n道がない…',
-      event: [{ warp: { map: 'ch4', x: 7, y: 8, dir: 'up' } }],
+      event: [{ warp: { map: 'ch4', x: 7, y: 8, dir: 'up' } }, { story: 'prologue' }],
     },
     // ch5 いなば
     {
       x: 16, y: 9, requires: 'ch4_clear',
       lockedMsg: '白兎の鳴き声が\n聞こえるが、\nまだ進めない…',
-      event: [{ warp: { map: 'ch5', x: 6, y: 1, dir: 'up' } }],
+      event: [{ warp: { map: 'ch5', x: 6, y: 1, dir: 'up' } }, { story: 'prologue' }],
     },
     // ch6 くにゆずり（いなさのはま）
     {
       x: 5, y: 10, requires: 'ch5_clear',
       lockedMsg: '海の向こうから\n大きな気配を\n感じる…',
-      event: [{ warp: { map: 'ch6', x: 8, y: 8, dir: 'up' } }],
+      event: [{ warp: { map: 'ch6', x: 8, y: 8, dir: 'up' } }, { story: 'prologue' }],
     },
     // ch7 ひむか
     {
       x: 13, y: 12, requires: 'ch6_clear',
       lockedMsg: '南の風が\n強く吹き、\nまだその先へは\n行けない…',
-      event: [{ warp: { map: 'ch7', x: 8, y: 8, dir: 'up' } }],
+      event: [{ warp: { map: 'ch7', x: 8, y: 8, dir: 'up' } }, { story: 'prologue' }],
     },
     // ch8 やまと
     {
       x: 9, y: 6, requires: 'ch7_clear',
       lockedMsg: '遠くに大和の国が\n見えるが、\n道はまだ\n閉ざされている…',
-      event: [{ warp: { map: 'ch8', x: 7, y: 9, dir: 'up' } }],
+      event: [{ warp: { map: 'ch8', x: 7, y: 9, dir: 'up' } }, { story: 'prologue' }],
     },
   ],
 };
