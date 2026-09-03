@@ -1,5 +1,6 @@
 // フィールド描画。内部解像度256x224（16x14タイル）を前提とし、
 // 呼び出し側（main.js）でctxを2倍スケールしてから使うこと。
+import { isSea } from './movement.js';
 
 export const TILE = 16;
 export const VIEW_COLS = 16; // 画面に表示するタイル数（横）
@@ -109,8 +110,13 @@ export function drawField(r, map, state, npcs = [], sparkles = []) {
     ctx.drawImage(spr, sx, sy, TILE, TILE);
   }
 
-  // 主人公描画（連続ピクセル座標。スプライトは `hero_${dir}_${frame}`）
-  const heroSpr = sprites.get(`hero_${hero.dir}_${hero.frame || 0}`);
+  // 主人公描画（連続ピクセル座標）。海の上では船の姿になる。
+  // 判定は移動先のタイルで行う：海へ漕ぎ出す瞬間から船で描き、
+  // 陸へ上がる瞬間から歩き姿に戻すことで、移動の途中で姿が入れ替わらない。
+  const onSea = isSea(map, hero.targetTx ?? hero.tx, hero.targetTy ?? hero.ty);
+  const heroSpr = onSea
+    ? sprites.get(`ship_${hero.dir}_${hero.frame || 0}`)
+    : sprites.get(`hero_${hero.dir}_${hero.frame || 0}`);
   if (heroSpr) {
     const sx = hero.px - camX;
     const sy = hero.py - camY;

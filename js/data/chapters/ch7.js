@@ -131,7 +131,7 @@ export const CH7 = {
     },
     {
       x: 8, y: 9,
-      event: [{ warp: { map: 'world', x: 13, y: 11, dir: 'up' } }],
+      event: [{ warp: { map: 'world', x: 2, y: 23, dir: 'down' } }],
     },
   ],
   quiz: [

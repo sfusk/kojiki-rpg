@@ -121,7 +121,7 @@ export const CH4 = {
   triggers: [
     {
       x: 7, y: 9,
-      event: [{ warp: { map: 'world', x: 6, y: 10, dir: 'down' } }],
+      event: [{ warp: { map: 'world', x: 3, y: 15, dir: 'up' } }],
     },
   ],
   quiz: [
