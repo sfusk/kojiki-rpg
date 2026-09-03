@@ -6,7 +6,7 @@ import { CODEX } from '../js/data/codexData.js';
 import {
   SCREEN_H, MAX_ITEMS,
   BATTLE_ITEM_WIN_Y, BATTLE_ITEM_MAX_VISIBLE, battleItemWinHeight,
-  POWER_WIN_Y, powerWinHeight,
+  POWER_WIN_Y, powerWinHeight, menuLocationMaxChars,
 } from '../js/data/uiLayout.js';
 
 const DIR_OFFSETS = [[0, -1], [0, 1], [-1, 0], [1, 0]];
@@ -107,5 +107,27 @@ describe('UI境界：戦闘どうぐ・つよさ表示が内部解像度224px内
   it('つよさウィンドウ：0件（なし表示）でも画面外へはみ出さない', () => {
     const h = powerWinHeight(0);
     expect(POWER_WIN_Y + h).toBeLessThanOrEqual(SCREEN_H);
+  });
+});
+
+describe('メニューの地名表示', () => {
+  it('全マップの地名がメニューの窓幅に収まる', () => {
+    const max = menuLocationMaxChars();
+    const overflow = [];
+    for (const [id, chapter] of Object.entries(CHAPTERS)) {
+      const label = chapter.title || chapter.name || '';
+      // 描画側と同じく空白で行に割ってから幅を判定する
+      for (const line of label.split(' ').filter((s) => s.length > 0)) {
+        if (line.length > max) overflow.push(`${id}: 「${line}」${line.length}文字 > ${max}文字`);
+      }
+    }
+    expect(overflow).toEqual([]);
+  });
+
+  it('全マップに表示できる地名がある', () => {
+    const missing = Object.entries(CHAPTERS)
+      .filter(([, c]) => !(c.title || c.name))
+      .map(([id]) => id);
+    expect(missing).toEqual([]);
   });
 });

@@ -639,6 +639,15 @@ function main() {
   function drawMenu() {
     const m = state.menu;
     if (m.section === 'root') {
+      // 地名は選択肢ウィンドウの左に置く。「第一章 オノゴロ島」のように
+      // 章と地名が空白で分かれている場合は2行に割って窓幅に収める
+      const here = currentChapter();
+      const label = here.title || here.name || '';
+      if (label) {
+        const lines = label.split(' ').filter((s) => s.length > 0);
+        drawWindow(ctx, 8, 8, 124, 22 * lines.length + 14);
+        lines.forEach((line, i) => drawText(ctx, line, 14, 16 + i * 22));
+      }
       drawChoiceWindow(ctx, m.rootWin, 140, 8, 108, 74);
     } else if (m.section === 'power') {
       const lines = state.items.length > 0 ? state.items : ['なし'];

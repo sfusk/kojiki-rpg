@@ -21,6 +21,20 @@ export function battleItemWinHeight(itemCount) {
   return BATTLE_ITEM_LINE_H * Math.min(itemCount, BATTLE_ITEM_MAX_VISIBLE) + BATTLE_ITEM_PAD;
 }
 
+// ── メニュー最初の画面の地名ウィンドウ ─────────────────────
+// 右側の選択肢ウィンドウ（x=140〜248）と重ならない幅に収める。
+// 章題は「第一章 オノゴロ島」のように空白で章と地名に分かれるため、
+// 描画側は空白で行を分けて1行あたりの文字数を抑えている。
+export const MENU_LOC_WIN_X = 8;
+export const MENU_LOC_WIN_W = 124;
+export const MENU_LOC_PAD = 12;   // 左右の内側余白
+export const MENU_LOC_CHAR_W = 16; // 全角1文字の幅（16pxフォント）
+
+// 地名ウィンドウの1行に収まる最大文字数
+export function menuLocationMaxChars() {
+  return Math.floor((MENU_LOC_WIN_W - MENU_LOC_PAD) / MENU_LOC_CHAR_W);
+}
+
 // ── メニュー「つよさ」ウィンドウ ─────────────────────────
 // もちものを折り返しなしの1行に詰め込むと画面外へはみ出すため、1行1アイテムで表示する。
 export const POWER_WIN_X = 8;
