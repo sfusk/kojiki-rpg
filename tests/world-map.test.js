@@ -75,12 +75,29 @@ describe('ワールドマップ', () => {
     expect(unreachable).toEqual([]);
   });
 
-  it('各章から戻る位置が陸地である', () => {
+  it('各章から戻る位置が進入できる場所である', () => {
     const bad = [];
     for (const [id, w] of Object.entries(returns)) {
       if (!canEnter(WORLD.map, w.x, w.y)) bad.push(`${id} → (${w.x},${w.y})`);
     }
     expect(bad).toEqual([]);
+  });
+
+  it('島にある章を除き、戻る位置は陸地である（海上に放り出されない）', () => {
+    // 第一章の淡路島だけは四方を海に囲まれた島なので、船で出る形になる
+    const islandChapters = new Set(['ch1']);
+    const onSea = [];
+    for (const [id, w] of Object.entries(returns)) {
+      if (islandChapters.has(id)) continue;
+      if (WORLD.map.rows[w.y][w.x] === '~') onSea.push(`${id} → (${w.x},${w.y})`);
+    }
+    expect(onSea).toEqual([]);
+  });
+
+  it('淡路島は四方を海に囲まれた独立した島である', () => {
+    const { x, y } = entrances.ch1;
+    const around = [[0,-1],[0,1],[-1,0],[1,0]].map(([dx,dy]) => WORLD.map.rows[y+dy][x+dx]);
+    expect(around).toEqual(['~', '~', '~', '~']);
   });
 
   it('戻る位置は入口の隣であり、入口そのものではない（再突入しない）', () => {

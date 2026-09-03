@@ -112,7 +112,7 @@ export const CH2 = {
     },
     {
       x: 8, y: 10,
-      event: [{ warp: { map: 'world', x: 7, y: 16, dir: 'down' } }],
+      event: [{ warp: { map: 'world', x: 8, y: 25, dir: 'up' } }],
     },
   ],
   quiz: [
