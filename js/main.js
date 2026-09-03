@@ -9,6 +9,7 @@ import { startEvent, stepEvent } from './engine/events.js';
 import { createQuiz, answerQuiz } from './engine/quiz.js';
 import { createBattle, battleAct } from './engine/battle.js';
 import { saveGame, loadGame } from './engine/save.js';
+import { createAudio } from './engine/audio.js';
 import { CHAPTERS } from './data/chapters/index.js';
 import { BOSSES } from './data/bosses.js';
 import { CODEX } from './data/codexData.js';
@@ -25,6 +26,7 @@ import {
 } from './data/uiLayout.js';
 
 const TWEEN_FRAMES = 8; // 1タイル移動にかけるフレーム数
+const FADE_FRAMES = 30; // マップ遷移後のフェードイン所要フレーム数
 const DEFAULT_LOCKED_MSG = '…'; // requires未達成時、lockedMsg省略時のメッセージ
 const BOOK_LIST_VISIBLE = 7; // 旅の書：一覧に一度に表示する項目数（スクロール表示の閾値）
 const CODEX_CATEGORIES = ['かみ', 'ちめい', 'ことば'];
@@ -73,6 +75,7 @@ function main() {
   const tiles = buildTiles();
   const input = createInput(window);
   const renderer = createRenderer(ctx, sprites, tiles);
+  const audio = createAudio();
 
   const initial = createState();
   const hasSave = loadGame(localStorage) !== null;
@@ -86,6 +89,8 @@ function main() {
     activeEvent: null, // 進行中のevent（startEventの戻り値）
     msg: null,         // フィールド会話用MessageBox
     speaker: null,     // 会話中のNPC表示名（トリガー由来のナレーションはnull）
+    fadeIn: 0,         // マップ遷移後のフェードイン残りフレーム数（0で演出なし）
+    eventStartMap: null, // イベント開始時のマップid（完了時に比較してワープ演出を出す）
     quiz: null,        // { data, id, win, phase: 'ask'|'result', resultMsg }
     battle: null,      // { data, id, phase: 'command'|'item'|'log', cmdWin, itemWin, logBox }
     menu: null,        // { section: 'root'|'power'|'tab'|'list'|'detail', rootWin, tabWin, bookWin, bookIds, detailBox }
@@ -117,6 +122,7 @@ function main() {
 
   // ── イベント進行の共通処理 ──────────────────────────
   function beginEvent(commands) {
+    state.eventStartMap = state.pos.map;
     state.activeEvent = startEvent(commands);
     advanceActiveEvent();
   }
@@ -141,11 +147,18 @@ function main() {
         cmdWin: createChoiceWindow(['たたかう', 'どうぐ', 'にげる']),
         itemWin: null, logBox: null,
       };
+      audio.playBgm('battle');
       state.mode = 'battle';
     } else {
       // イベント完了：state.posはwarpで既に更新済みのはずなのでheroを合わせる
       state.activeEvent = null;
       state.speaker = null;
+      // マップが変わっていたらワープ演出（効果音＋暗転からのフェードイン）
+      if (state.eventStartMap !== null && state.pos.map !== state.eventStartMap) {
+        audio.playSfx('warp');
+        state.fadeIn = FADE_FRAMES;
+      }
+      state.eventStartMap = null;
       syncHeroToPos();
       // 第8章クイズクリアのイベントdone時、玉が8個そろっていれば真エンディングへ
       // （ending_seenで一度きりに限定：以後どのイベントが終わっても再突入しない）
@@ -190,6 +203,7 @@ function main() {
   function backToTitle() {
     const hasSaveNow = loadGame(localStorage) !== null;
     state.title = createChoiceWindow(hasSaveNow ? ['はじめから', 'つづきから'] : ['はじめから']);
+    audio.stopBgm();
     state.mode = 'title';
   }
 
@@ -253,6 +267,8 @@ function main() {
       }
       syncHeroToPos();
       state.title = null;
+      audio.unlock(); // キー入力起点なので自動再生制限をここで解除できる
+      audio.playBgm('field');
       state.mode = 'field';
     }
   }
@@ -451,6 +467,7 @@ function main() {
         const more = advanceMessageBox(b.logBox);
         if (more) return;
         if (b.data.over) {
+          audio.playBgm('field'); // 勝敗どちらでも戦闘曲からフィールド曲へ戻す
           if (b.data.result === 'win') {
             state.battle = null;
             advanceActiveEvent();
@@ -616,6 +633,13 @@ function main() {
     } else if (state.mode === 'menu') {
       updateMenu();
       if (state.menu) drawMenu();
+    }
+
+    // マップ遷移直後のフェードイン：黒からゆっくり明ける
+    if (state.fadeIn > 0) {
+      ctx.fillStyle = `rgba(0, 0, 0, ${(state.fadeIn / FADE_FRAMES).toFixed(3)})`;
+      ctx.fillRect(0, 0, 256, 224);
+      state.fadeIn--;
     }
     requestAnimationFrame(loop);
   }
