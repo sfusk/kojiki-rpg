@@ -11,6 +11,7 @@
 export const CH8 = {
   id: 'ch8',
   name: 'やまと',
+  title: '第八章 大和',
   requires: 'ch7_clear',
   map: {
     rows: [
@@ -32,6 +33,7 @@ export const CH8 = {
   npcs: [
     {
       id: 'karasu',
+      name: '八咫烏',
       x: 6, y: 2,
       sprite: 'rabbit',
       event: [
@@ -60,6 +62,7 @@ export const CH8 = {
     },
     {
       id: 'yamatohime',
+      name: 'ヤマトヒメ',
       x: 11, y: 2,
       sprite: 'lady',
       requires: 'ch8_jinmu',
@@ -87,6 +90,7 @@ export const CH8 = {
     },
     {
       id: 'takeru_maboroshi',
+      name: 'タケルの幻',
       x: 11, y: 6,
       sprite: 'warrior',
       requires: 'ch8_kumaso',
@@ -118,6 +122,7 @@ export const CH8 = {
     },
     {
       id: 'kataribe',
+      name: '語り部',
       x: 8, y: 8,
       sprite: 'elder',
       requires: 'ch8_takeru',

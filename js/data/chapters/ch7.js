@@ -12,6 +12,7 @@
 export const CH7 = {
   id: 'ch7',
   name: 'ひむか',
+  title: '第七章 日向',
   requires: 'ch6_clear',
   map: {
     rows: [
@@ -33,6 +34,7 @@ export const CH7 = {
   npcs: [
     {
       id: 'umisachihiko',
+      name: '海幸彦',
       x: 9, y: 5,
       sprite: 'lord',
       event: [
@@ -45,6 +47,7 @@ export const CH7 = {
     },
     {
       id: 'yamasachihiko',
+      name: '山幸彦',
       x: 9, y: 6,
       sprite: 'warrior',
       requires: 'ch7_kourin',
@@ -79,6 +82,7 @@ export const CH7 = {
     },
     {
       id: 'kataribe',
+      name: '語り部',
       x: 11, y: 3,
       sprite: 'elder',
       requires: 'ch7_umisachi',

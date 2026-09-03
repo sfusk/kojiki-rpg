@@ -85,6 +85,7 @@ function main() {
     returnPos: null,   // 戦闘敗北時に戻すフィールド上の位置
     activeEvent: null, // 進行中のevent（startEventの戻り値）
     msg: null,         // フィールド会話用MessageBox
+    speaker: null,     // 会話中のNPC表示名（トリガー由来のナレーションはnull）
     quiz: null,        // { data, id, win, phase: 'ask'|'result', resultMsg }
     battle: null,      // { data, id, phase: 'command'|'item'|'log', cmdWin, itemWin, logBox }
     menu: null,        // { section: 'root'|'power'|'tab'|'list'|'detail', rootWin, tabWin, bookWin, bookIds, detailBox }
@@ -144,6 +145,7 @@ function main() {
     } else {
       // イベント完了：state.posはwarpで既に更新済みのはずなのでheroを合わせる
       state.activeEvent = null;
+      state.speaker = null;
       syncHeroToPos();
       // 第8章クイズクリアのイベントdone時、玉が8個そろっていれば真エンディングへ
       // （ending_seenで一度きりに限定：以後どのイベントが終わっても再突入しない）
@@ -220,6 +222,7 @@ function main() {
 
   // requires未達成ならlockedMsgを表示するだけでイベントは開始しない（NPC・トリガー共通）
   function startGatedEvent(entity) {
+    state.speaker = entity.name || null; // NPCなら名前タグを出す
     if (entity.requires && !hasFlag(state, entity.requires)) {
       state.msg = createMessageBox(entity.lockedMsg || DEFAULT_LOCKED_MSG);
       state.mode = 'msg';
@@ -338,13 +341,31 @@ function main() {
       const more = advanceMessageBox(state.msg);
       if (!more) {
         state.msg = null;
+        // lockedMsg（activeEventなし）で閉じた場合も名前タグを消す
+        if (!state.activeEvent) state.speaker = null;
         advanceActiveEvent();
       }
     }
   }
 
   function drawMsg() {
+    // 話者名タグ：メッセージ窓の左上に重ねて表示（トリガーのナレーションでは出さない）
+    if (state.speaker) {
+      const w = state.speaker.length * 16 + 20;
+      drawWindow(ctx, 8, 132, w, 24);
+      drawText(ctx, state.speaker, 18, 136);
+    }
     drawMessageBox(ctx, state.msg, 8, 156, 240, 60);
+  }
+
+  // 現在地ラベル：フィールド探索中のみ左上に表示（章・場所がひと目でわかるように）
+  function drawLocationLabel() {
+    const chapter = currentChapter();
+    const label = chapter.title || chapter.name || '';
+    if (!label) return;
+    const w = label.length * 16 + 20;
+    drawWindow(ctx, 4, 4, w, 24);
+    drawText(ctx, label, 14, 8);
   }
 
   // ── quiz：問題文＋4択ChoiceWindow ───────────────────
@@ -442,6 +463,7 @@ function main() {
             const hint = (BOSSES[b.id] && BOSSES[b.id].hint) || '';
             state.battle = null;
             state.activeEvent = null; // イベントは中断する
+            state.speaker = null; // 敗北メッセージはナレーション扱い
             state.msg = createMessageBox(`目の前が\n真っ暗になった…\n${hint}`);
             state.mode = 'msg';
           }
@@ -579,6 +601,7 @@ function main() {
 
     if (state.mode === 'field') {
       updateField();
+      if (state.mode === 'field') drawLocationLabel();
     } else if (state.mode === 'msg') {
       updateMsg();
       // updateMsg中にイベントが進み、同フレームで別モードへ遷移してmsgがnullになることがある

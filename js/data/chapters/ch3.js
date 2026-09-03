@@ -7,6 +7,7 @@
 export const CH3 = {
   id: 'ch3',
   name: 'たかまがはら',
+  title: '第三章 高天原',
   requires: 'ch2_clear',
   map: {
     rows: [
@@ -28,6 +29,7 @@ export const CH3 = {
   npcs: [
     {
       id: 'uzume',
+      name: 'アメノウズメ',
       x: 9, y: 3,
       sprite: 'lady',
       event: [
@@ -44,6 +46,7 @@ export const CH3 = {
     },
     {
       id: 'tajikarao',
+      name: 'タヂカラオ',
       x: 13, y: 4,
       sprite: 'warrior',
       event: [
@@ -60,6 +63,7 @@ export const CH3 = {
     },
     {
       id: 'kataribe',
+      name: '語り部',
       x: 5, y: 9,
       sprite: 'elder',
       requires: 'ch3_iwato',

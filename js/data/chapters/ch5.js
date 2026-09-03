@@ -6,6 +6,7 @@
 export const CH5 = {
   id: 'ch5',
   name: 'いなば・ねのくに',
+  title: '第五章 因幡・根の国',
   requires: 'ch4_clear',
   map: {
     rows: [
@@ -27,6 +28,7 @@ export const CH5 = {
   npcs: [
     {
       id: 'usagi',
+      name: '因幡の白兎',
       x: 4, y: 2,
       sprite: 'rabbit',
       event: [
@@ -53,6 +55,7 @@ export const CH5 = {
     },
     {
       id: 'okuninushi',
+      name: 'オオクニヌシ',
       x: 9, y: 2,
       sprite: 'lord',
       event: [
@@ -64,6 +67,7 @@ export const CH5 = {
     },
     {
       id: 'suseri',
+      name: 'スセリビメ',
       x: 2, y: 8,
       sprite: 'lady',
       event: [
@@ -83,6 +87,7 @@ export const CH5 = {
     },
     {
       id: 'kataribe',
+      name: '語り部',
       x: 10, y: 3,
       sprite: 'elder',
       requires: 'ch5_trial',

@@ -1,22 +1,26 @@
 // キー入力管理。押下中のキーをSetで保持する。
 const ARROW_KEYS = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
 const TRACKED_KEYS = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'z', 'x']);
+// 別キー割り当て：Enter=決定(z)、Escape=キャンセル(x)。内部では正規化後のキー名で扱う。
+const KEY_ALIASES = { Enter: 'z', Escape: 'x', Z: 'z', X: 'x' };
 
 export function createInput(target) {
   const down = new Set();
 
   const onKeyDown = (e) => {
     if (ARROW_KEYS.has(e.key)) e.preventDefault();
-    if (!TRACKED_KEYS.has(e.key)) return;
+    const key = KEY_ALIASES[e.key] || e.key;
+    if (!TRACKED_KEYS.has(key)) return;
     // 長押し中のネイティブkeydownリピートを無視する。
     // これを無視しないと、consume()で一度取り出して消したキーが
     // リピートイベントで即座に再追加され、単発入力のはずが連続発火してしまう。
     if (e.repeat) return;
-    down.add(e.key);
+    down.add(key);
   };
   const onKeyUp = (e) => {
-    if (!TRACKED_KEYS.has(e.key)) return;
-    down.delete(e.key);
+    const key = KEY_ALIASES[e.key] || e.key;
+    if (!TRACKED_KEYS.has(key)) return;
+    down.delete(key);
   };
 
   target.addEventListener('keydown', onKeyDown);

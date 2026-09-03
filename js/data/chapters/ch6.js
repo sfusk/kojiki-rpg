@@ -6,6 +6,7 @@
 export const CH6 = {
   id: 'ch6',
   name: 'くにゆずり',
+  title: '第六章 国譲り',
   requires: 'ch5_clear',
   map: {
     rows: [
@@ -27,6 +28,7 @@ export const CH6 = {
   npcs: [
     {
       id: 'takemikazuchi',
+      name: 'タケミカヅチ',
       x: 6, y: 2,
       sprite: 'warrior',
       event: [
@@ -38,6 +40,7 @@ export const CH6 = {
     },
     {
       id: 'okuninushi',
+      name: 'オオクニヌシ',
       x: 9, y: 4,
       sprite: 'lord',
       event: [
@@ -47,6 +50,7 @@ export const CH6 = {
     },
     {
       id: 'takeminakata',
+      name: 'タケミナカタ',
       x: 2, y: 6,
       sprite: 'warrior',
       event: [
@@ -70,6 +74,7 @@ export const CH6 = {
     },
     {
       id: 'kataribe',
+      name: '語り部',
       x: 12, y: 7,
       sprite: 'elder',
       requires: 'ch6_yuzuri',

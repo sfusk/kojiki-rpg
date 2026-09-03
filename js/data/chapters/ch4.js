@@ -6,6 +6,7 @@
 export const CH4 = {
   id: 'ch4',
   name: 'いずも',
+  title: '第四章 出雲',
   requires: 'ch3_clear',
   map: {
     rows: [
@@ -27,6 +28,7 @@ export const CH4 = {
   npcs: [
     {
       id: 'ashinazuchi',
+      name: 'アシナヅチ',
       x: 10, y: 2,
       sprite: 'elder',
       event: [
@@ -47,6 +49,7 @@ export const CH4 = {
     },
     {
       id: 'kushinada',
+      name: 'クシナダヒメ',
       x: 12, y: 3,
       sprite: 'lady',
       event: [
@@ -57,6 +60,7 @@ export const CH4 = {
     },
     {
       id: 'susanoo',
+      name: 'スサノオ',
       x: 8, y: 5,
       sprite: 'warrior',
       event: [
@@ -70,6 +74,7 @@ export const CH4 = {
     },
     {
       id: 'orochi',
+      name: 'ヤマタノオロチ',
       x: 9, y: 6,
       sprite: 'snake',
       requires: 'ch4_sake',
@@ -90,6 +95,7 @@ export const CH4 = {
     },
     {
       id: 'kataribe',
+      name: '語り部',
       x: 9, y: 9,
       sprite: 'elder',
       requires: 'ch4_slay',

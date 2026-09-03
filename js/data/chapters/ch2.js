@@ -6,6 +6,7 @@
 export const CH2 = {
   id: 'ch2',
   name: 'よもつひらさか',
+  title: '第二章 黄泉比良坂',
   requires: 'ch1_clear',
   map: {
     rows: [
@@ -27,6 +28,7 @@ export const CH2 = {
   npcs: [
     {
       id: 'izanagi',
+      name: 'イザナギ',
       x: 7, y: 9,
       sprite: 'lord',
       event: [
@@ -39,6 +41,7 @@ export const CH2 = {
     },
     {
       id: 'izanami',
+      name: 'イザナミ',
       x: 12, y: 1,
       sprite: 'lady',
       event: [
@@ -61,6 +64,7 @@ export const CH2 = {
     },
     {
       id: 'kataribe',
+      name: '語り部',
       x: 6, y: 9,
       sprite: 'elder',
       requires: 'ch2_escape',
