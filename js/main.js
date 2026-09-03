@@ -10,6 +10,7 @@ import { createQuiz, answerQuiz } from './engine/quiz.js';
 import { createBattle, battleAct } from './engine/battle.js';
 import { saveGame, loadGame } from './engine/save.js';
 import { createAudio } from './engine/audio.js';
+import { VERSION } from './data/version.js';
 import { CHAPTERS } from './data/chapters/index.js';
 import { BOSSES } from './data/bosses.js';
 import { CODEX } from './data/codexData.js';
@@ -281,6 +282,13 @@ function main() {
     ctx.fillRect(0, 0, 256, 224);
     drawText(ctx, 'かむがたり', 92, 60);
     drawChoiceWindow(ctx, state.title, 70, 100, 116, 22 * state.title.items.length + 16);
+    // ビルド識別子：古いキャッシュを掴んでいないかの目視確認用
+    ctx.save();
+    ctx.font = "10px 'ＭＳ ゴシック', monospace";
+    ctx.fillStyle = '#666';
+    ctx.textBaseline = 'top';
+    ctx.fillText(VERSION, 186, 208);
+    ctx.restore();
   }
 
   // ── field：移動＋前方インタラクト（NPC）＋踏むと発動（トリガー）──
