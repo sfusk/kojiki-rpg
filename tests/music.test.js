@@ -23,7 +23,7 @@ describe('BGM譜面データ', () => {
     });
     it(`${name}: 各トラックの音符が有効（音域24-96またはrest0、長さは正の整数）`, () => {
       for (const tr of tune.tracks) {
-        expect(['square', 'triangle', 'sine', 'sawtooth']).toContain(tr.type);
+        expect(['square', 'triangle', 'sine', 'sawtooth', 'koto', 'shakuhachi']).toContain(tr.type);
         expect(tr.gain).toBeGreaterThan(0);
         expect(tr.gain).toBeLessThanOrEqual(0.2); // 音割れ防止の上限
         expect(tr.notes.length).toBeGreaterThan(0);

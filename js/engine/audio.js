@@ -29,8 +29,94 @@ export function createAudio() {
     return ctx;
   }
 
-  // 1音をwhen秒に予約する。減衰エンベロープつきで角の立ちすぎを抑える
+  // ブレスノイズ用のホワイトノイズバッファ（1秒分を使い回す）
+  let noiseBuf = null;
+  function getNoiseBuf() {
+    if (!noiseBuf) {
+      noiseBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+      const data = noiseBuf.getChannelData(0);
+      for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    }
+    return noiseBuf;
+  }
+
+  // 和琴：弦を爪弾く音。鋭い立ち上がり＋指数減衰、オクターブ上の倍音を重ねて弦の張りを出す
+  function playKoto(freq, when, dur, gain) {
+    const decay = Math.min(Math.max(dur * 1.3, 0.4), 1.6);
+    const body = ctx.createOscillator();
+    const bg = ctx.createGain();
+    body.type = 'triangle';
+    body.frequency.value = freq;
+    bg.gain.setValueAtTime(gain, when);
+    bg.gain.exponentialRampToValueAtTime(0.001, when + decay);
+    body.connect(bg);
+    bg.connect(master);
+    body.start(when);
+    body.stop(when + decay + 0.05);
+
+    const harm = ctx.createOscillator();
+    const hg = ctx.createGain();
+    harm.type = 'sine';
+    harm.frequency.value = freq * 2;
+    hg.gain.setValueAtTime(gain * 0.5, when);
+    hg.gain.exponentialRampToValueAtTime(0.001, when + decay * 0.35);
+    harm.connect(hg);
+    hg.connect(master);
+    harm.start(when);
+    harm.stop(when + decay * 0.4);
+  }
+
+  // 尺八：息の混ざった笛の音。柔らかい立ち上がり＋ビブラート＋帯域ノイズのブレス
+  function playShakuhachi(freq, when, dur, gain) {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    const attack = Math.min(0.1, dur * 0.3);
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.exponentialRampToValueAtTime(gain, when + attack);
+    g.gain.setValueAtTime(gain, when + Math.max(dur - 0.12, attack));
+    g.gain.exponentialRampToValueAtTime(0.001, when + dur);
+    osc.connect(g);
+    g.connect(master);
+
+    // ビブラート（音が伸びるほど揺れが深くなる）
+    const lfo = ctx.createOscillator();
+    const lfoGain = ctx.createGain();
+    lfo.frequency.value = 5;
+    lfoGain.gain.setValueAtTime(0, when);
+    lfoGain.gain.linearRampToValueAtTime(freq * 0.008, when + Math.min(dur, 0.6));
+    lfo.connect(lfoGain);
+    lfoGain.connect(osc.frequency);
+    lfo.start(when);
+    lfo.stop(when + dur + 0.05);
+
+    // ブレスノイズ：音程近辺の帯域だけ薄く重ねる
+    const noise = ctx.createBufferSource();
+    noise.buffer = getNoiseBuf();
+    noise.loop = true;
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = freq * 2;
+    bp.Q.value = 2;
+    const ng = ctx.createGain();
+    ng.gain.setValueAtTime(0.0001, when);
+    ng.gain.exponentialRampToValueAtTime(gain * 0.18, when + attack);
+    ng.gain.exponentialRampToValueAtTime(0.001, when + dur);
+    noise.connect(bp);
+    bp.connect(ng);
+    ng.connect(master);
+    noise.start(when);
+    noise.stop(when + dur + 0.05);
+
+    osc.start(when);
+    osc.stop(when + dur + 0.05);
+  }
+
+  // 1音をwhen秒に予約する。typeが楽器名なら専用シンセ、波形名なら素の発振器
   function scheduleNote(freq, when, dur, type, gain) {
+    if (type === 'koto') { playKoto(freq, when, dur, gain); return; }
+    if (type === 'shakuhachi') { playShakuhachi(freq, when, dur, gain); return; }
     const osc = ctx.createOscillator();
     const g = ctx.createGain();
     osc.type = type;

@@ -98,6 +98,9 @@ function main() {
     title: createChoiceWindow(hasSave ? ['はじめから', 'つづきから'] : ['はじめから']),
   };
 
+  // デバッグ・自動テスト用にstateを公開する（ゲームロジックからは参照しない）
+  window.__state = state;
+
   // ── マップ遷移：state.pos.map で CHAPTERS から現マップを引く ──
   function currentChapter() {
     return CHAPTERS[state.pos.map];
