@@ -94,10 +94,79 @@ describe('ワールドマップ', () => {
     expect(onSea).toEqual([]);
   });
 
-  it('淡路島は四方を海に囲まれた独立した島である', () => {
-    const { x, y } = entrances.ch1;
-    const around = [[0,-1],[0,1],[-1,0],[1,0]].map(([dx,dy]) => WORLD.map.rows[y+dy][x+dx]);
-    expect(around).toEqual(['~', '~', '~', '~']);
+  // 陸だけを辿った連結成分（＝ひとつの島）を返す
+  function islandAt(x, y) {
+    const rows = WORLD.map.rows;
+    const isLand = (px, py) => py >= 0 && py < rows.length
+      && px >= 0 && px < rows[py].length && rows[py][px] !== '~';
+    const seen = new Set([`${x},${y}`]);
+    const queue = [{ x, y }];
+    while (queue.length > 0) {
+      const cur = queue.shift();
+      for (const { dx, dy } of Object.values(DIRS)) {
+        const nx = cur.x + dx;
+        const ny = cur.y + dy;
+        const key = `${nx},${ny}`;
+        if (seen.has(key) || !isLand(nx, ny)) continue;
+        seen.add(key);
+        queue.push({ x: nx, y: ny });
+      }
+    }
+    return seen;
+  }
+
+  it('北海道・本州・四国・九州・淡路島がそれぞれ独立した島である', () => {
+    // 各島の代表点（この座標が陸であることも同時に確かめる）
+    const points = {
+      北海道: { x: 24, y: 5 },
+      本州: { x: 20, y: 20 },
+      四国: { x: 12, y: 29 },
+      九州: { x: 4, y: 30 },
+      淡路島: entrances.ch1,
+    };
+    const islands = {};
+    for (const [name, p] of Object.entries(points)) {
+      expect(WORLD.map.rows[p.y][p.x], `${name}の代表点が海になっている`).not.toBe('~');
+      islands[name] = islandAt(p.x, p.y);
+    }
+    // どの二つの島も陸続きになっていないこと
+    const names = Object.keys(points);
+    const merged = [];
+    for (let i = 0; i < names.length; i++) {
+      for (let j = i + 1; j < names.length; j++) {
+        const a = islands[names[i]];
+        const b = islands[names[j]];
+        if ([...a].some((k) => b.has(k))) merged.push(`${names[i]}と${names[j]}`);
+      }
+    }
+    expect(merged).toEqual([]);
+  });
+
+  it('淡路島は本州や四国から切り離された小島である', () => {
+    const rows = WORLD.map.rows;
+    const isLand = (x, y) => y >= 0 && y < rows.length
+      && x >= 0 && x < rows[y].length && rows[y][x] !== '~';
+    // 第一章の入口を含む「陸だけを辿った」連結成分＝淡路島
+    const start = entrances.ch1;
+    const seen = new Set([`${start.x},${start.y}`]);
+    const queue = [start];
+    while (queue.length > 0) {
+      const cur = queue.shift();
+      for (const { dx, dy } of Object.values(DIRS)) {
+        const nx = cur.x + dx;
+        const ny = cur.y + dy;
+        const key = `${nx},${ny}`;
+        if (seen.has(key) || !isLand(nx, ny)) continue;
+        seen.add(key);
+        queue.push({ x: nx, y: ny });
+      }
+    }
+    const totalLand = rows.join('').split('').filter((c) => c !== '~').length;
+    // 島として成立する広さ（1マスでは点にしか見えない）でありながら、
+    // 本州や四国と地続きになっていないこと
+    expect(seen.size).toBeGreaterThanOrEqual(2);
+    expect(seen.size).toBeLessThanOrEqual(4);
+    expect(seen.size).toBeLessThan(totalLand / 10);
   });
 
   it('戻る位置は入口の隣であり、入口そのものではない（再突入しない）', () => {
