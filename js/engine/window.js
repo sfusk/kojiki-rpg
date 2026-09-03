@@ -2,9 +2,10 @@
 // drawWindow/drawText/drawMessageBox/drawChoiceWindow はcanvas ctxに依存する描画関数。
 // paginateText/moveCursor/create*/advance*等は状態計算のみを行う純粋関数（DOM非依存・テスト対象）。
 
+import { RUBY_OFFSET_Y, QUIZ_CHOICE_TOP_PAD } from '../data/uiLayout.js';
+
 export const FONT = "16px 'ＭＳ ゴシック', monospace";
 export const RUBY_FONT = "8px 'ＭＳ ゴシック', monospace"; // ふりがな用
-export const RUBY_OFFSET_Y = 9; // 本文の上端から何px上にふりがなを描くか
 const RADIUS = 6; // ウィンドウ角丸半径
 
 // 黒地・白枠2px・角丸のウィンドウを描画する
@@ -142,7 +143,7 @@ export function drawChoiceWindow(ctx, win, x, y, w, h, lineHeight = 22, maxVisib
     start = Math.min(Math.max(win.cursor - Math.floor(maxVisible / 2), 0), count - maxVisible);
   }
   // ふりがなを出すときは1行目の読みが枠の外へ出ないよう上に余白を足す
-  const topPad = rubyOf ? 10 + RUBY_OFFSET_Y : 10;
+  const topPad = rubyOf ? QUIZ_CHOICE_TOP_PAD + RUBY_OFFSET_Y : 10;
   for (let row = 0; row < visible; row++) {
     const i = start + row;
     const ly = y + topPad + row * lineHeight;

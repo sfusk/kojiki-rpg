@@ -30,15 +30,28 @@ export const QUIZ_WIN_W = 240;
 export const QUIZ_Q_LINE_H = 18;      // 問題文の行間
 export const QUIZ_Q_PAD = 16;         // 問題文の窓の上下余白
 export const QUIZ_GAP = 8;            // 問題文の窓と選択肢の窓の間隔
-export const QUIZ_CHOICE_LINE_H = 26; // 選択肢の行間（ふりがなのぶん広め）
-export const QUIZ_CHOICE_PAD = 25;    // 選択肢の窓の上下余白（1行目のふりがなのぶん含む）
+// 選択肢の行間。ふりがな（RUBY_OFFSET_Y上）と本文（TEXT_H）を積んだうえで、
+// 上の行の本文と次の行のふりがなの間に読みやすい隙間が空くよう決めている。
+export const TEXT_H = 16;             // 本文フォントの高さ
+export const RUBY_OFFSET_Y = 9;       // 本文上端から何px上にふりがなを描くか
+export const RUBY_CLEARANCE = 5;      // 上の行の本文と次の行のふりがなの間隔
+export const QUIZ_CHOICE_LINE_H = TEXT_H + RUBY_CLEARANCE + RUBY_OFFSET_Y; // = 30
+export const QUIZ_CHOICE_TOP_PAD = 10;    // 窓上端から1行目のふりがな上端まで
+export const QUIZ_CHOICE_BOTTOM_PAD = 8;  // 最終行の本文下端から窓下端まで
 
 export function quizQuestionWinHeight(lineCount) {
   return QUIZ_Q_PAD + lineCount * QUIZ_Q_LINE_H;
 }
 
+// 1行目の本文上端（窓上端からの相対位置）。ふりがなを描く余地を上に確保する
+export function quizChoiceFirstLineY() {
+  return QUIZ_CHOICE_TOP_PAD + RUBY_OFFSET_Y;
+}
+
 export function quizChoiceWinHeight(choiceCount) {
-  return QUIZ_CHOICE_LINE_H * choiceCount + QUIZ_CHOICE_PAD;
+  const lastTextBottom = quizChoiceFirstLineY()
+    + QUIZ_CHOICE_LINE_H * (choiceCount - 1) + TEXT_H;
+  return lastTextBottom + QUIZ_CHOICE_BOTTOM_PAD;
 }
 
 // 選択肢の窓の下端（画面内に収まるかの判定に使う）

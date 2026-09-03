@@ -4,7 +4,12 @@ import { describe, it, expect } from 'vitest';
 import { CHAPTERS } from '../js/data/chapters/index.js';
 import { READINGS, readingOf } from '../js/data/readings.js';
 import { paginateText } from '../js/engine/window.js';
-import { SCREEN_H, quizBottom, QUIZ_WIN_W } from '../js/data/uiLayout.js';
+import {
+  SCREEN_H, quizBottom, QUIZ_WIN_W,
+  TEXT_H, RUBY_OFFSET_Y, RUBY_CLEARANCE,
+  QUIZ_CHOICE_LINE_H, QUIZ_CHOICE_BOTTOM_PAD,
+  quizChoiceFirstLineY, quizChoiceWinHeight,
+} from '../js/data/uiLayout.js';
 
 const CHARS_PER_LINE = 12;
 
@@ -37,6 +42,26 @@ describe('クイズ画面のレイアウト', () => {
       }
     }
     expect(tooLong).toEqual([]);
+  });
+});
+
+describe('選択肢の行の間隔', () => {
+  it('上の行の本文と次の行のふりがなが重ならず隙間が空く', () => {
+    // 行nの本文下端と、行n+1のふりがな上端の距離
+    const textBottom = TEXT_H;
+    const nextRubyTop = QUIZ_CHOICE_LINE_H - RUBY_OFFSET_Y;
+    expect(nextRubyTop - textBottom).toBe(RUBY_CLEARANCE);
+    expect(RUBY_CLEARANCE).toBeGreaterThan(0);
+  });
+
+  it('最終行の下の余白が過大でない（上の余白と釣り合う）', () => {
+    for (const n of [2, 3, 4]) {
+      const h = quizChoiceWinHeight(n);
+      const lastTextBottom = quizChoiceFirstLineY() + QUIZ_CHOICE_LINE_H * (n - 1) + TEXT_H;
+      expect(h - lastTextBottom).toBe(QUIZ_CHOICE_BOTTOM_PAD);
+      // 行間ぶんの空白が下に残らないこと
+      expect(h - lastTextBottom).toBeLessThan(QUIZ_CHOICE_LINE_H);
+    }
   });
 });
 
