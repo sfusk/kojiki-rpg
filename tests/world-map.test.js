@@ -5,6 +5,7 @@ import { describe, it, expect } from 'vitest';
 import { WORLD } from '../js/data/world.js';
 import { CHAPTERS } from '../js/data/chapters/index.js';
 import { canEnter, DIRS } from '../js/engine/movement.js';
+import { createState } from '../js/engine/flags.js';
 
 function flatten(commands, out = []) {
   for (const cmd of commands || []) {
@@ -114,6 +115,22 @@ describe('ワールドマップ', () => {
     }
     return seen;
   }
+
+  it('旅の始まりの位置が定義と実際で一致し、陸地にある', () => {
+    const start = createState().pos;
+    expect(start.map).toBe('world');
+    // world.js の entry（設計上の入口）と createState の初期位置がずれていると、
+    // 海の上から始まるなど意図しない場所で開始してしまう
+    expect({ x: start.x, y: start.y }).toEqual({ x: WORLD.entry.x, y: WORLD.entry.y });
+    expect(WORLD.map.rows[start.y][start.x]).not.toBe('~');
+  });
+
+  it('旅の始まりから第一章の入口が近い（物語の順に巡れる）', () => {
+    const start = WORLD.entry;
+    const e = entrances.ch1;
+    const dist = Math.abs(start.x - e.x) + Math.abs(start.y - e.y);
+    expect(dist).toBeLessThanOrEqual(4);
+  });
 
   it('北海道・本州・四国・九州・淡路島がそれぞれ独立した島である', () => {
     // 各島の代表点（この座標が陸であることも同時に確かめる）

@@ -1,6 +1,7 @@
 export function createState() {
   return { flags: [], items: [], orbs: 0, codex: [],
-           pos: { map: 'world', x: 11, y: 8, dir: 'down' } };
+           // 旅立ちの地は淡路島の対岸（近畿の海辺）。world.js の entry と揃えること
+           pos: { map: 'world', x: 12, y: 26, dir: 'down' } };
 }
 export function setFlag(s, name) { if (!s.flags.includes(name)) s.flags.push(name); }
 export function hasFlag(s, name) { return s.flags.includes(name); }
