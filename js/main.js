@@ -297,7 +297,8 @@ function main() {
       if (dir) {
         hero.dir = dir;
         state.pos.dir = dir;
-        const result = tryStep(chapter.map, { x: hero.tx, y: hero.ty, dir }, dir);
+        // NPCのいるタイルへは進めない（すり抜け防止）
+        const result = tryStep(chapter.map, { x: hero.tx, y: hero.ty, dir }, dir, npcs);
         if (result.moved) {
           hero.moving = true;
           hero.tweenFrame = 0;

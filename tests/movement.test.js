@@ -23,4 +23,14 @@ describe('移動判定', () => {
     const r = tryStep(map, { x: 1, y: 1, dir: 'down' }, 'up');
     expect(r).toEqual({ moved: false, pos: { x: 1, y: 1, dir: 'up' } });
   });
+  it('tryStep: NPCのいるタイルには進めない（すり抜け防止）', () => {
+    const npcs = [{ x: 1, y: 2 }];
+    const r = tryStep(map, { x: 1, y: 1, dir: 'down' }, 'down', npcs);
+    expect(r).toEqual({ moved: false, pos: { x: 1, y: 1, dir: 'down' } });
+  });
+  it('tryStep: NPCがいない方向へは通常どおり進める', () => {
+    const npcs = [{ x: 1, y: 2 }];
+    const r = tryStep(map, { x: 2, y: 1, dir: 'down' }, 'left', npcs);
+    expect(r).toEqual({ moved: true, pos: { x: 1, y: 1, dir: 'left' } });
+  });
 });
