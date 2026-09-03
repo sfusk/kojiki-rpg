@@ -626,7 +626,8 @@ function main() {
     } else if (state.mode === 'msg') {
       updateMsg();
       // updateMsg中にイベントが進み、同フレームで別モードへ遷移してmsgがnullになることがある
-      if (state.msg) drawMsg();
+      // 会話中も現在地ラベルは出し続ける（クイズ・戦闘・メニューは左上に窓が出るため出さない）
+      if (state.msg) { drawLocationLabel(); drawMsg(); }
     } else if (state.mode === 'quiz') {
       updateQuiz();
       if (state.quiz) drawQuiz();
