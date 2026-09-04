@@ -7,6 +7,8 @@ import {
   SCREEN_H, MAX_ITEMS,
   BATTLE_ITEM_WIN_Y, BATTLE_ITEM_MAX_VISIBLE, battleItemWinHeight,
   POWER_WIN_Y, powerWinHeight, menuLocationMaxChars,
+  menuLocationLines, locationText, modernNameText,
+  fieldLocationMaxChars, powerLocationMaxChars, POWER_LOC_PREFIX,
 } from '../js/data/uiLayout.js';
 
 const DIR_OFFSETS = [[0, -1], [0, 1], [-1, 0], [1, 0]];
@@ -115,9 +117,8 @@ describe('メニューの地名表示', () => {
     const max = menuLocationMaxChars();
     const overflow = [];
     for (const [id, chapter] of Object.entries(CHAPTERS)) {
-      const label = chapter.title || chapter.name || '';
-      // 描画側と同じく空白で行に割ってから幅を判定する
-      for (const line of label.split(' ').filter((s) => s.length > 0)) {
+      // 描画側と同じ関数で行に割ってから幅を判定する（かっこ書きの行も含む）
+      for (const line of menuLocationLines(chapter)) {
         if (line.length > max) overflow.push(`${id}: 「${line}」${line.length}文字 > ${max}文字`);
       }
     }
@@ -129,5 +130,58 @@ describe('メニューの地名表示', () => {
       .filter(([, c]) => !(c.title || c.name))
       .map(([id]) => id);
     expect(missing).toEqual([]);
+  });
+});
+
+describe('現在の地名のかっこ書き', () => {
+  it('全マップに現在の地名が定義されている', () => {
+    const missing = Object.entries(CHAPTERS)
+      .filter(([, c]) => !c.modern)
+      .map(([id]) => id);
+    expect(missing).toEqual([]);
+  });
+
+  it('章題のうしろにかっこ書きで現在の地名が付く', () => {
+    expect(modernNameText(CHAPTERS.ch1)).toBe('（淡路島）');
+    expect(locationText(CHAPTERS.ch1)).toBe('第一章 オノゴロ島（淡路島）');
+    expect(menuLocationLines(CHAPTERS.ch1)).toEqual(['第一章', 'オノゴロ島', '（淡路島）']);
+  });
+
+  it('現在の地名がないマップではかっこ書きを付けない', () => {
+    // 表示側が空文字を返し、余分な「（）」が出ないこと
+    expect(modernNameText({ title: '名もなき地' })).toBe('');
+    expect(locationText({ title: '名もなき地' })).toBe('名もなき地');
+    expect(menuLocationLines({ title: '名もなき地' })).toEqual(['名もなき地']);
+  });
+
+  it('章やマップの指定がなくても落ちない', () => {
+    expect(locationText(undefined)).toBe('');
+    expect(menuLocationLines(undefined)).toEqual([]);
+  });
+
+  it('フィールド左上のラベルが画面幅に収まる', () => {
+    const max = fieldLocationMaxChars();
+    const overflow = [];
+    for (const [id, chapter] of Object.entries(CHAPTERS)) {
+      const text = locationText(chapter);
+      if (text.length > max) overflow.push(`${id}: 「${text}」${text.length}文字 > ${max}文字`);
+    }
+    expect(overflow).toEqual([]);
+  });
+
+  it('つよさ画面の現在地行が窓幅に収まる', () => {
+    // かっこ書きは次の行へ送るため、1行目は「現在地：」＋章題のみで判定する
+    const max = powerLocationMaxChars();
+    const overflow = [];
+    for (const [id, chapter] of Object.entries(CHAPTERS)) {
+      const line = POWER_LOC_PREFIX + (chapter.title || chapter.name || '');
+      if (line.length > max) overflow.push(`${id}: 「${line}」${line.length}文字 > ${max}文字`);
+      const modern = modernNameText(chapter);
+      // 2行目はさらに「現在地：」ぶん字下げするため、その分を差し引いて判定
+      if (modern.length + POWER_LOC_PREFIX.length > max) {
+        overflow.push(`${id}: かっこ書き「${modern}」が字下げぶんではみ出す`);
+      }
+    }
+    expect(overflow).toEqual([]);
   });
 });

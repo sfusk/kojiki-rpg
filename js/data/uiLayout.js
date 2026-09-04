@@ -74,15 +74,57 @@ export function menuLocationMaxChars() {
   return Math.floor((MENU_LOC_WIN_W - MENU_LOC_PAD) / MENU_LOC_CHAR_W);
 }
 
+// ── 地名の文字列組み立て ─────────────────────────────────
+// 章題（例「第一章 オノゴロ島」）に、そこに相当する現在の地名を
+// かっこ書きで添える（例「（淡路島）」）。神話の舞台が今のどこかを
+// すぐ結びつけられるようにするための表示。描画とテストで同じ関数を使う。
+export function modernNameText(chapter) {
+  return chapter && chapter.modern ? `（${chapter.modern}）` : '';
+}
+
+// フィールド左上・つよさ画面など、1行に収める場合の表記
+export function locationText(chapter) {
+  const label = (chapter && (chapter.title || chapter.name)) || '';
+  return label + modernNameText(chapter);
+}
+
+// メニュー最初の画面用。章題を空白で割り、現在の地名を最後の行として足す
+export function menuLocationLines(chapter) {
+  const label = (chapter && (chapter.title || chapter.name)) || '';
+  const lines = label.split(' ').filter((s) => s.length > 0);
+  const modern = modernNameText(chapter);
+  if (modern) lines.push(modern);
+  return lines;
+}
+
+// ── フィールド左上の現在地ラベル ─────────────────────────
+// 12pxフォントの小さな窓。画面幅からはみ出さない文字数を上限とする。
+export const FIELD_LOC_WIN_X = 4;
+export const FIELD_LOC_CHAR_W = 12; // 全角1文字の幅（12pxフォント）
+export const FIELD_LOC_PAD = 16;    // 窓の左右の内側余白
+export function fieldLocationMaxChars() {
+  return Math.floor((SCREEN_W - FIELD_LOC_WIN_X * 2 - FIELD_LOC_PAD) / FIELD_LOC_CHAR_W);
+}
+
 // ── メニュー「つよさ」ウィンドウ ─────────────────────────
 // もちものを折り返しなしの1行に詰め込むと画面外へはみ出すため、1行1アイテムで表示する。
 export const POWER_WIN_X = 8;
 export const POWER_WIN_Y = 8;
 export const POWER_WIN_W = 240;
-export const POWER_LOCATION_Y = 16;    // 絶対y座標：現在地
-export const POWER_ORB_Y = 38;         // 絶対y座標：玉の数
-export const POWER_ITEMS_LABEL_Y = 60; // 絶対y座標：「持ち物：」の見出し
-export const POWER_ITEM_START_Y = 80;  // 絶対y座標：もちもの一覧の先頭行
+// 現在地は「現在地：第二章 黄泉比良坂」＋「（東出雲）」の2行に分ける。
+// 1行に続けると窓幅240pxを越えるため。
+export const POWER_LOCATION_Y = 16;        // 絶対y座標：現在地（章題）
+export const POWER_LOCATION_MODERN_Y = 34; // 絶対y座標：現在の地名（かっこ書き）
+export const POWER_LOCATION_INDENT = 64;   // 「現在地：」4文字ぶん。かっこ書きの字下げ
+export const POWER_ORB_Y = 56;         // 絶対y座標：玉の数
+export const POWER_ITEMS_LABEL_Y = 78; // 絶対y座標：「持ち物：」の見出し
+export const POWER_ITEM_START_Y = 98;  // 絶対y座標：もちもの一覧の先頭行
+export const POWER_LOC_PREFIX = '現在地：';
+export const POWER_LOC_PAD = 12;       // 左右の内側余白
+// つよさ画面の現在地1行に収まる最大文字数（「現在地：」を含む）
+export function powerLocationMaxChars() {
+  return Math.floor((POWER_WIN_W - POWER_LOC_PAD) / MENU_LOC_CHAR_W);
+}
 export const POWER_ITEM_LINE_H = 16;
 export const POWER_FOOTER_GAP = 14;    // 最終アイテム行と「もどる」案内文の間隔
 

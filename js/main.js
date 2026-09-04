@@ -26,8 +26,10 @@ import {
   BATTLE_ITEM_WIN_X, BATTLE_ITEM_WIN_Y, BATTLE_ITEM_WIN_W, BATTLE_ITEM_LINE_H,
   BATTLE_ITEM_MAX_VISIBLE, battleItemWinHeight,
   POWER_WIN_X, POWER_WIN_Y, POWER_WIN_W, POWER_ITEM_START_Y, POWER_ITEM_LINE_H,
-  POWER_LOCATION_Y, POWER_ORB_Y, POWER_ITEMS_LABEL_Y,
+  POWER_LOCATION_Y, POWER_LOCATION_MODERN_Y, POWER_LOCATION_INDENT,
+  POWER_LOC_PREFIX, POWER_ORB_Y, POWER_ITEMS_LABEL_Y,
   POWER_FOOTER_GAP, powerWinHeight,
+  FIELD_LOC_WIN_X, locationText, modernNameText, menuLocationLines,
   QUIZ_WIN_X, QUIZ_WIN_Y, QUIZ_WIN_W, QUIZ_Q_LINE_H, QUIZ_GAP, QUIZ_CHOICE_LINE_H,
   quizQuestionWinHeight, quizChoiceWinHeight,
 } from './data/uiLayout.js';
@@ -457,7 +459,8 @@ function main() {
   function drawLocationLabel() {
     if (state.locationTimer <= 0) return;
     const chapter = currentChapter();
-    const label = chapter.title || chapter.name || '';
+    // 章題に現在の地名をかっこ書きで添える（例「第一章 オノゴロ島（淡路島）」）
+    const label = locationText(chapter);
     if (!label) return;
     ctx.save();
     ctx.font = LOCATION_FONT;
@@ -467,11 +470,11 @@ function main() {
     const alpha = Math.min(state.locationTimer / LOCATION_FADE_FRAMES, 1);
     ctx.save();
     ctx.globalAlpha = alpha;
-    drawWindow(ctx, 4, 4, textW + 16, 18);
+    drawWindow(ctx, FIELD_LOC_WIN_X, 4, textW + 16, 18);
     ctx.font = LOCATION_FONT;
     ctx.fillStyle = '#fff';
     ctx.textBaseline = 'top';
-    ctx.fillText(label, 12, 8);
+    ctx.fillText(label, FIELD_LOC_WIN_X + 8, 8);
     ctx.restore();
     state.locationTimer--;
   }
@@ -678,11 +681,11 @@ function main() {
     const m = state.menu;
     if (m.section === 'root') {
       // 地名は選択肢ウィンドウの左に置く。「第一章 オノゴロ島」のように
-      // 章と地名が空白で分かれている場合は2行に割って窓幅に収める
+      // 章と地名が空白で分かれている場合は2行に割り、最後に現在の地名を
+      // かっこ書きで足して窓幅に収める
       const here = currentChapter();
-      const label = here.title || here.name || '';
-      if (label) {
-        const lines = label.split(' ').filter((s) => s.length > 0);
+      const lines = menuLocationLines(here);
+      if (lines.length > 0) {
         drawWindow(ctx, 8, 8, 124, 22 * lines.length + 14);
         lines.forEach((line, i) => drawText(ctx, line, 14, 16 + i * 22));
       }
@@ -692,7 +695,10 @@ function main() {
       const h = powerWinHeight(state.items.length);
       drawWindow(ctx, POWER_WIN_X, POWER_WIN_Y, POWER_WIN_W, h);
       const here = currentChapter();
-      drawText(ctx, `現在地：${here.title || here.name || ''}`, 14, POWER_LOCATION_Y);
+      drawText(ctx, `${POWER_LOC_PREFIX}${here.title || here.name || ''}`, 14, POWER_LOCATION_Y);
+      // 現在の地名は「現在地：」の字下げに揃えて次の行へ。1行に続けると窓幅を越える
+      const modern = modernNameText(here);
+      if (modern) drawText(ctx, modern, 14 + POWER_LOCATION_INDENT, POWER_LOCATION_MODERN_Y);
       drawText(ctx, `玉の数：${state.orbs}`, 14, POWER_ORB_Y);
       drawText(ctx, '持ち物：', 14, POWER_ITEMS_LABEL_Y);
       lines.forEach((label, i) => drawText(ctx, label, 14, POWER_ITEM_START_Y + i * POWER_ITEM_LINE_H));
