@@ -14,6 +14,7 @@
 //   第七章 日向       → 宮崎
 //   第八章 大和       → 奈良
 // 入口はすべて鳥居（t）か洞窟（c）で示し、無地の草原に隠れないようにしている。
+// さらに beacon を付け、条件を満たした「次の章」の入口だけが光るようにしている。
 export const WORLD = {
   id: 'world',
   name: 'あしはらのなかつくに',
@@ -73,48 +74,56 @@ export const WORLD = {
     // 第一章 オノゴロ島＝淡路島（船でしか行けない独立した島）
     {
       x: 16, y: 28,
+      beacon: 'ch1_clear',
       event: [{ warp: { map: 'ch1', x: 7, y: 10, dir: 'up' } }, { story: 'prologue' }],
     },
     // 第二章 黄泉比良坂＝出雲・伊賦夜坂（洞窟）
     {
       x: 10, y: 26, requires: 'ch1_clear',
       lockedMsg: '強い穢れを感じる。\nまだ入れない…',
+      beacon: 'ch2_clear',
       event: [{ warp: { map: 'ch2', x: 8, y: 9, dir: 'up' } }, { story: 'prologue' }],
     },
     // 第三章 高天原＝中部の高峰
     {
       x: 21, y: 21, requires: 'ch2_clear',
       lockedMsg: '天の梯子は\nまだ下りてこない…',
+      beacon: 'ch3_clear',
       event: [{ warp: { map: 'ch3', x: 7, y: 9, dir: 'up' } }, { story: 'prologue' }],
     },
     // 第四章 出雲＝斐伊川上流
     {
       x: 9, y: 26, requires: 'ch3_clear',
       lockedMsg: '川上から\n鳴き声が聞こえるが\n道がない…',
+      beacon: 'ch4_clear',
       event: [{ warp: { map: 'ch4', x: 7, y: 8, dir: 'up' } }, { story: 'prologue' }],
     },
     // 第五章 因幡＝鳥取
     {
       x: 12, y: 25, requires: 'ch4_clear',
       lockedMsg: '白兎の鳴き声が\n聞こえるが、\nまだ進めない…',
+      beacon: 'ch5_clear',
       event: [{ warp: { map: 'ch5', x: 6, y: 1, dir: 'up' } }, { story: 'prologue' }],
     },
     // 第六章 国譲り＝稲佐の浜（出雲）
     {
       x: 8, y: 26, requires: 'ch5_clear',
       lockedMsg: '海の向こうから\n大きな気配を\n感じる…',
+      beacon: 'ch6_clear',
       event: [{ warp: { map: 'ch6', x: 8, y: 8, dir: 'up' } }, { story: 'prologue' }],
     },
     // 第七章 日向＝宮崎
     {
       x: 6, y: 31, requires: 'ch6_clear',
       lockedMsg: '南の風が\n強く吹き、\nまだその先へは\n行けない…',
+      beacon: 'ch7_clear',
       event: [{ warp: { map: 'ch7', x: 8, y: 8, dir: 'up' } }, { story: 'prologue' }],
     },
     // 第八章 大和＝奈良
     {
       x: 17, y: 25, requires: 'ch7_clear',
       lockedMsg: '遠くに大和の国が\n見えるが、\n道はまだ\n閉ざされている…',
+      beacon: 'ch8_clear',
       event: [{ warp: { map: 'ch8', x: 7, y: 9, dir: 'up' } }, { story: 'prologue' }],
     },
   ],

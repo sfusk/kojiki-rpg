@@ -54,7 +54,34 @@ function drawSparkle(ctx, sx, sy, tick) {
   ctx.restore();
 }
 
-export function drawField(r, map, state, npcs = [], sparkles = []) {
+// 次の章の入口を示す光。鳥居や洞窟のタイルを包むように輪が広がる。
+// 章の中の小さな目印（drawSparkle）よりも大きく、遠目にも「ここへ行け」と分かる。
+const BEACON_CYCLE = 96;
+
+function drawBeacon(ctx, sx, sy, tick) {
+  const phase = ((tick % BEACON_CYCLE) / BEACON_CYCLE) * Math.PI * 2;
+  const pulse = 0.5 + 0.5 * Math.sin(phase);
+  const cx = sx + TILE / 2;
+  const cy = sy + TILE / 2;
+  ctx.save();
+  // 広がっては消える輪
+  const radius = TILE * (0.45 + pulse * 0.35);
+  ctx.globalAlpha = 0.65 * (1 - pulse);
+  ctx.strokeStyle = '#fff3b0';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+  ctx.stroke();
+  // 内側の芯。輪が消えている間もタイルの位置が分かるように残す
+  ctx.globalAlpha = 0.35 + pulse * 0.45;
+  ctx.fillStyle = '#ffe98a';
+  ctx.beginPath();
+  ctx.arc(cx, cy, 2 + pulse, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+export function drawField(r, map, state, npcs = [], sparkles = [], beacons = []) {
   const { ctx, sprites, tiles } = r;
   const { hero } = state;
 
@@ -94,6 +121,9 @@ export function drawField(r, map, state, npcs = [], sparkles = []) {
   }
 
   // 目印の光（地面の上、キャラクターの下に描く）
+  for (const bc of beacons) {
+    drawBeacon(ctx, bc.x * TILE - camX, bc.y * TILE - camY, state.animTick || 0);
+  }
   for (const sp of sparkles) {
     drawSparkle(ctx, sp.x * TILE - camX, sp.y * TILE - camY, state.animTick || 0);
   }

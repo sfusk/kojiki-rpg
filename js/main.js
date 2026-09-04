@@ -33,6 +33,7 @@ import {
   QUIZ_WIN_X, QUIZ_WIN_Y, QUIZ_WIN_W, QUIZ_Q_LINE_H, QUIZ_GAP, QUIZ_CHOICE_LINE_H,
   quizQuestionWinHeight, quizChoiceWinHeight,
 } from './data/uiLayout.js';
+import { pendingMarkers } from './engine/markers.js';
 import { readingOf } from './data/readings.js';
 
 const GAME_TITLE = 'RPG古事記';
@@ -334,11 +335,13 @@ function main() {
   // 条件（requires）を満たしていないものは出さない。満たした時に新しく光ることで
   // 「次はここへ」という道しるべになる。
   function pendingSparkles(chapter) {
-    return (chapter.triggers || [])
-      .filter((tr) => tr.sparkle
-        && !hasFlag(state, tr.sparkle)
-        && (!tr.requires || hasFlag(state, tr.requires)))
-      .map((tr) => ({ x: tr.x, y: tr.y }));
+    return pendingMarkers(chapter.triggers, state.flags, 'sparkle');
+  }
+
+  // ワールドマップで「次に向かう章の入口」を光らせる。前の章をクリアした
+  // 瞬間に新しい鳥居が光り、その章をクリアすると消える。
+  function pendingBeacons(chapter) {
+    return pendingMarkers(chapter.triggers, state.flags, 'beacon');
   }
 
   // ── field：移動＋前方インタラクト（NPC）＋踏むと発動（トリガー）──
@@ -744,7 +747,8 @@ function main() {
 
     const chapter = currentChapter();
     const drawNpcs = (chapter.npcs || []).map((n) => ({ name: n.sprite, x: n.x, y: n.y, frame: n.frame || 0 }));
-    drawField(renderer, chapter.map, state, drawNpcs, pendingSparkles(chapter));
+    drawField(renderer, chapter.map, state, drawNpcs,
+              pendingSparkles(chapter), pendingBeacons(chapter));
 
     if (state.mode === 'field') {
       updateField();

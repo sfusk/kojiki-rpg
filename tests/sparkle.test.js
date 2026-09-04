@@ -4,6 +4,8 @@
 // 一致していなければならない（不一致だと永久に光り続ける）。
 import { describe, it, expect } from 'vitest';
 import { CHAPTERS } from '../js/data/chapters/index.js';
+import { WORLD } from '../js/data/world.js';
+import { pendingMarkers } from '../js/engine/markers.js';
 
 // イベントコマンドを条件分岐の中まで含めて平坦化する
 function flatten(commands, out = []) {
@@ -82,5 +84,62 @@ describe('光の目印', () => {
       }
     }
     expect(unguarded).toEqual([]);
+  });
+});
+
+
+describe('次の章の入口を示す光（beacon）', () => {
+  const chapterIds = Object.keys(CHAPTERS).filter((id) => id !== 'world');
+
+  it('ワールドの全8章の入口に光がある', () => {
+    const marked = WORLD.triggers.filter((tr) => tr.beacon).length;
+    expect(marked).toBe(chapterIds.length);
+  });
+
+  it('光のフラグは、その章を最後まで進めると必ず立つ', () => {
+    // フラグが立たないと入口が永久に光り続ける
+    const broken = [];
+    for (const tr of WORLD.triggers) {
+      if (!tr.beacon) continue;
+      const chapterId = flatten(tr.event).find((c) => c.warp).warp.map;
+      const chapter = CHAPTERS[chapterId];
+      const sets = [
+        ...flatten(chapter.triggers ? chapter.triggers.flatMap((t) => t.event || []) : []),
+        ...flatten((chapter.npcs || []).flatMap((n) => n.event || [])),
+      ].filter((c) => c.set).map((c) => c.set);
+      if (!sets.includes(tr.beacon)) broken.push(`${chapterId}: 「${tr.beacon}」を立てるsetがない`);
+    }
+    expect(broken).toEqual([]);
+  });
+
+  it('光るのは条件を満たした「次の章」の入口ひとつだけ', () => {
+    // 章を順にクリアしていくと、光が次の入口へ移っていく
+    const flags = [];
+    for (const id of chapterIds) {
+      const lit = pendingMarkers(WORLD.triggers, flags, 'beacon');
+      const expected = WORLD.triggers.find((tr) => tr.beacon === `${id}_clear`);
+      expect(lit).toEqual([{ x: expected.x, y: expected.y }]);
+      flags.push(`${id}_clear`);
+    }
+    // すべてクリアするとどこも光らない
+    expect(pendingMarkers(WORLD.triggers, flags, 'beacon')).toEqual([]);
+  });
+
+  it('クリア済みの章の入口は光らない', () => {
+    const flags = ['ch1_clear'];
+    const lit = pendingMarkers(WORLD.triggers, flags, 'beacon');
+    const ch1 = WORLD.triggers.find((tr) => tr.beacon === 'ch1_clear');
+    expect(lit.some((p) => p.x === ch1.x && p.y === ch1.y)).toBe(false);
+  });
+
+  it('章の中のトリガーには beacon を付けない（ワールド専用の道しるべ）', () => {
+    const wrong = [];
+    for (const [mapId, chapter] of chapters) {
+      if (mapId === 'world') continue;
+      for (const tr of chapter.triggers || []) {
+        if (tr.beacon) wrong.push(`${mapId}(${tr.x},${tr.y})`);
+      }
+    }
+    expect(wrong).toEqual([]);
   });
 });
