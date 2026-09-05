@@ -71,10 +71,30 @@ describe('ふりがな辞書', () => {
     expect(bad).toEqual([]);
   });
 
-  it('辞書の見出し語が実際にクイズの選択肢として登場する', () => {
+  it('辞書の見出し語がクイズの選択肢か本文のどこかに登場する', () => {
+    // 使われない見出しは、書き間違い（表記ゆれ）か、消し忘れのどちらか。
+    // ふりがなはクイズのルビと本文のかっこ書きの両方で使うため、
+    // どちらにも出てこない語だけを取り除く対象とする。
     const used = new Set();
     for (const { q } of allQuestions) for (const c of q.choices) used.add(c);
-    const unused = Object.keys(READINGS).filter((w) => !used.has(w));
+    const prose = [];
+    const collect = (cmds) => {
+      for (const c of cmds || []) {
+        if (c.msg) prose.push(c.msg);
+        if (c.then) collect(c.then);
+        if (c.else) collect(c.else);
+      }
+    };
+    for (const chapter of Object.values(CHAPTERS)) {
+      for (const which of ['prologue', 'epilogue']) {
+        if (chapter[which]) prose.push(chapter[which]);
+      }
+      for (const npc of chapter.npcs || []) collect(npc.event);
+      for (const tr of chapter.triggers || []) collect(tr.event);
+      for (const q of chapter.quiz || []) prose.push(q.q, q.explain);
+    }
+    const text = prose.join('\n');
+    const unused = Object.keys(READINGS).filter((w) => !used.has(w) && !text.includes(w));
     expect(unused).toEqual([]);
   });
 

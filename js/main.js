@@ -34,7 +34,7 @@ import {
   quizQuestionWinHeight, quizChoiceWinHeight,
 } from './data/uiLayout.js';
 import { pendingMarkers } from './engine/markers.js';
-import { readingOf } from './data/readings.js';
+import { readingOf, annotateReadings } from './data/readings.js';
 
 const GAME_TITLE = 'RPG古事記';
 const TWEEN_FRAMES = 8; // 1タイル移動にかけるフレーム数
@@ -160,7 +160,7 @@ function main() {
     const r = stepEvent(state.activeEvent, state);
     if (r.kind === 'msg') {
       state.mode = 'msg';
-      state.msg = createMessageBox(r.text);
+      state.msg = messageBox(r.text);
     } else if (r.kind === 'quiz') {
       const questions = (CHAPTERS[r.id] && CHAPTERS[r.id].quiz) || [];
       state.quiz = { data: createQuiz(questions), id: r.id, phase: 'ask', win: null, question: null, result: null, resultMsg: null };
@@ -170,7 +170,7 @@ function main() {
       // 章の導入・締め。テキストが未定義の章では黙って読み飛ばす
       const text = (currentChapter() || {})[r.which];
       if (!text) { advanceActiveEvent(); return; }
-      state.story = createMessageBox(text, { linesPerPage: STORY_LINES_PER_PAGE });
+      state.story = messageBox(text, { linesPerPage: STORY_LINES_PER_PAGE });
       state.mode = 'story';
     } else if (r.kind === 'battle') {
       const boss = BOSSES[r.id];
@@ -206,7 +206,7 @@ function main() {
 
   // ── ending：神々の系譜をZ送りで4段階表示→タイトルへ戻る ──
   function beginEnding() {
-    state.ending = { stage: 0, box: createMessageBox(ENDING_STAGES[0], { linesPerPage: ENDING_LINES_PER_PAGE }) };
+    state.ending = { stage: 0, box: messageBox(ENDING_STAGES[0], { linesPerPage: ENDING_LINES_PER_PAGE }) };
     state.mode = 'ending';
   }
 
@@ -219,7 +219,7 @@ function main() {
       const nextStage = ending.stage + 1;
       if (nextStage < ENDING_STAGES.length) {
         ending.stage = nextStage;
-        ending.box = createMessageBox(ENDING_STAGES[nextStage], { linesPerPage: ENDING_LINES_PER_PAGE });
+        ending.box = messageBox(ENDING_STAGES[nextStage], { linesPerPage: ENDING_LINES_PER_PAGE });
       } else {
         state.ending = null;
         backToTitle();
@@ -252,7 +252,7 @@ function main() {
   }
 
   function startBattleLog(battle) {
-    battle.logBox = createMessageBox(battle.data.log.join('\n'));
+    battle.logBox = messageBox(battle.data.log.join('\n'));
     battle.phase = 'log';
   }
 
@@ -277,7 +277,7 @@ function main() {
   function startGatedEvent(entity) {
     state.speaker = entity.name || null; // NPCなら名前タグを出す
     if (entity.requires && !hasFlag(state, entity.requires)) {
-      state.msg = createMessageBox(entity.lockedMsg || DEFAULT_LOCKED_MSG);
+      state.msg = messageBox(entity.lockedMsg || DEFAULT_LOCKED_MSG);
       state.mode = 'msg';
       return;
     }
@@ -329,6 +329,13 @@ function main() {
     ctx.textBaseline = 'top';
     ctx.fillText(VERSION, 186, 208);
     ctx.restore();
+  }
+
+  // 本文の固有名詞にかっこ書きのふりがなを添えてからメッセージ窓を作る。
+  // 「高天原」→「高天原（たかまがはら）」。窓の幅での折り返しもここで済ませる。
+  function messageBox(text, opts = {}) {
+    const charsPerLine = opts.charsPerLine ?? 12;
+    return createMessageBox(annotateReadings(text, charsPerLine), opts);
   }
 
   // まだ見届けていないイベントの位置を返す（地面に光の目印を出すため）。
@@ -491,7 +498,7 @@ function main() {
       else if (input.consume('z')) {
         const r = answerQuiz(quiz.data, quiz.win.cursor);
         quiz.result = r;
-        quiz.resultMsg = createMessageBox(r.correct ? `正解！ ${r.explain}` : `違う…　${r.explain}`);
+        quiz.resultMsg = messageBox(r.correct ? `正解！ ${r.explain}` : `違う…　${r.explain}`);
         quiz.phase = 'result';
       }
     } else {
@@ -584,7 +591,7 @@ function main() {
             state.battle = null;
             state.activeEvent = null; // イベントは中断する
             state.speaker = null; // 敗北メッセージはナレーション扱い
-            state.msg = createMessageBox(`目の前が\n真っ暗になった…\n${hint}`);
+            state.msg = messageBox(`目の前が\n真っ暗になった…\n${hint}`);
             state.mode = 'msg';
           }
         } else {
@@ -667,7 +674,7 @@ function main() {
         if (!state.codex.includes(id)) return; // 未発見の項目は開けない
         const entry = CODEX.find((c) => c.id === id);
         const text = `${entry.name}\n\n${entry.desc}\n\n『${entry.excerpt}』\n\n（${entry.source}）`;
-        m.detailBox = createMessageBox(text, { linesPerPage: 7 });
+        m.detailBox = messageBox(text, { linesPerPage: 7 });
         m.section = 'detail';
       }
     } else if (m.section === 'detail') {
