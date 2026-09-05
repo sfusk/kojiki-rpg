@@ -2,6 +2,9 @@
 <!-- 開発中は常に最新のJSを読ませる（古いモジュールが残るとバグ修正が反映されないため） -->
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
+<!-- 外部リソースを一切読まない自己完結のページなので、既定を none にして
+     自分自身のJS/CSSだけを許可する。万一の差し込みを実行させないための保険 -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'">
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="css/style.css"></head>
 <body><canvas id="game" width="512" height="448"></canvas>
