@@ -34,6 +34,14 @@ export function createInput(target) {
       if (down.has(key)) { down.delete(key); return true; }
       return false;
     },
+    // メッセージ送り。決定キー（Z/Enter）に加えて下矢印でも次へ進める。
+    // 「文章を下へ送る」動作として下向きの矢印が自然なため。
+    // カーソル移動に下矢印を使う場面（メニュー・クイズの選択）では呼ばない。
+    consumeAdvance() {
+      if (down.has('z')) { down.delete('z'); return true; }
+      if (down.has('ArrowDown')) { down.delete('ArrowDown'); return true; }
+      return false;
+    },
     // イベントリスナーの解除（テスト・再生成時に使用）
     destroy() {
       target.removeEventListener('keydown', onKeyDown);

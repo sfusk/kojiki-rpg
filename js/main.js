@@ -213,7 +213,7 @@ function main() {
   function updateEnding() {
     const ending = state.ending;
     tickMessageBox(ending.box);
-    if (input.consume('z')) {
+    if (input.consumeAdvance()) {
       const more = advanceMessageBox(ending.box);
       if (more) return;
       const nextStage = ending.stage + 1;
@@ -334,6 +334,9 @@ function main() {
   // 本文の固有名詞にかっこ書きのふりがなを添えてからメッセージ窓を作る。
   // 「高天原」→「高天原（たかまがはら）」。窓の幅での折り返しもここで済ませる。
   function messageBox(text, opts = {}) {
+    // 歩きながら下矢印を押しっぱなしのまま話しかけたり踏んだりしたとき、
+    // 開いた瞬間にその押下で1ページ読み飛ばさないよう捨てておく
+    input.consume('ArrowDown');
     const charsPerLine = opts.charsPerLine ?? 12;
     return createMessageBox(annotateReadings(text, charsPerLine), opts);
   }
@@ -425,7 +428,7 @@ function main() {
   // ── story：章の導入・締めの語り（全画面・Z送り） ──────
   function updateStory() {
     tickMessageBox(state.story);
-    if (input.consume('z')) {
+    if (input.consumeAdvance()) {
       const more = advanceMessageBox(state.story);
       if (!more) {
         state.story = null;
@@ -443,7 +446,7 @@ function main() {
   // ── msg：フィールド会話（Z送り→イベント継続） ──────
   function updateMsg() {
     tickMessageBox(state.msg);
-    if (input.consume('z')) {
+    if (input.consumeAdvance()) {
       const more = advanceMessageBox(state.msg);
       if (!more) {
         state.msg = null;
@@ -503,7 +506,7 @@ function main() {
       }
     } else {
       tickMessageBox(quiz.resultMsg);
-      if (input.consume('z')) {
+      if (input.consumeAdvance()) {
         const more = advanceMessageBox(quiz.resultMsg);
         if (more) return;
         if (quiz.result.finished) {
@@ -572,7 +575,7 @@ function main() {
       }
     } else if (b.phase === 'log') {
       tickMessageBox(b.logBox);
-      if (input.consume('z')) {
+      if (input.consumeAdvance()) {
         const more = advanceMessageBox(b.logBox);
         if (more) return;
         if (b.data.over) {
@@ -680,7 +683,7 @@ function main() {
     } else if (m.section === 'detail') {
       tickMessageBox(m.detailBox);
       if (input.consume('x')) { m.section = 'list'; }
-      else if (input.consume('z')) {
+      else if (input.consumeAdvance()) {
         const more = advanceMessageBox(m.detailBox);
         if (!more) m.section = 'list';
       }
