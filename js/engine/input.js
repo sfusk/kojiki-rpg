@@ -29,6 +29,10 @@ export function createInput(target) {
   return {
     // 押下中かどうか（連続判定。移動キーのホールド判定に使う）
     isDown(key) { return down.has(key); },
+    // 画面上のボタン（タッチ操作）から押下・解放を伝える。
+    // キーボードと同じ状態に流し込むので、ゲーム側は入力元を区別しなくてよい。
+    press(key) { if (TRACKED_KEYS.has(key)) down.add(key); },
+    release(key) { down.delete(key); },
     // 押下を1回だけ拾い、Setから取り除く（決定・キャンセル等の単発入力に使う）
     consume(key) {
       if (down.has(key)) { down.delete(key); return true; }

@@ -20,6 +20,42 @@ function keyEvent(key, repeat = false) {
   return { key, repeat, preventDefault() {} };
 }
 
+describe('画面のボタン（タッチ操作）', () => {
+  it('pressでキーを押した扱いになり、releaseで離れる', () => {
+    const input = createInput(createFakeTarget());
+    input.press('ArrowDown');
+    expect(input.isDown('ArrowDown')).toBe(true);
+    input.release('ArrowDown');
+    expect(input.isDown('ArrowDown')).toBe(false);
+  });
+
+  it('押している間は移動キーとして拾われ続ける（歩きっぱなしにできる）', () => {
+    const input = createInput(createFakeTarget());
+    input.press('ArrowRight');
+    expect(input.isDown('ArrowRight')).toBe(true);
+    expect(input.isDown('ArrowRight')).toBe(true);
+  });
+
+  it('pressした決定キーはconsumeで1回だけ拾える', () => {
+    const input = createInput(createFakeTarget());
+    input.press('z');
+    expect(input.consume('z')).toBe(true);
+    expect(input.consume('z')).toBe(false);
+  });
+
+  it('扱わないキーをpressしても無視する', () => {
+    const input = createInput(createFakeTarget());
+    input.press('Shift');
+    expect(input.isDown('Shift')).toBe(false);
+  });
+
+  it('押していないキーをreleaseしても壊れない', () => {
+    const input = createInput(createFakeTarget());
+    expect(() => input.release('ArrowUp')).not.toThrow();
+    expect(input.isDown('ArrowUp')).toBe(false);
+  });
+});
+
 describe('メッセージ送り（consumeAdvance）', () => {
   it('決定キーでも下矢印でも送れる', () => {
     const target = createFakeTarget();

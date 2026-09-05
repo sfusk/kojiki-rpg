@@ -1,4 +1,7 @@
 <!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><title>RPG古事記</title>
+<!-- スマホ・タブレットで画面幅に合わせる。ノッチの内側まで背景を伸ばす -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
 <!-- 開発中は常に最新のJSを読ませる（古いモジュールが残るとバグ修正が反映されないため） -->
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
@@ -7,5 +10,19 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'">
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="css/style.css"></head>
-<body><canvas id="game" width="512" height="448"></canvas>
+<body>
+<canvas id="game" width="512" height="448"></canvas>
+<!-- タッチ操作用のボタン。指で触れる端末だけJSが hidden を外して表示する -->
+<div id="pad" hidden>
+  <div id="dpad">
+    <button type="button" class="pad-btn up" data-key="ArrowUp" aria-label="うえへ動く">▲</button>
+    <button type="button" class="pad-btn left" data-key="ArrowLeft" aria-label="ひだりへ動く">◀</button>
+    <button type="button" class="pad-btn right" data-key="ArrowRight" aria-label="みぎへ動く">▶</button>
+    <button type="button" class="pad-btn down" data-key="ArrowDown" aria-label="したへ動く">▼</button>
+  </div>
+  <div id="acts">
+    <button type="button" class="act-btn" data-key="z" aria-label="けってい・はなす">けってい</button>
+    <button type="button" class="act-btn" data-key="x" aria-label="メニューを開く">メニュー</button>
+  </div>
+</div>
 <script type="module" src="js/main.js"></script></body></html>

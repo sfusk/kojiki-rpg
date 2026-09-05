@@ -35,6 +35,7 @@ import {
 } from './data/uiLayout.js';
 import { pendingMarkers } from './engine/markers.js';
 import { readingOf, annotateReadings } from './data/readings.js';
+import { HELP_TEXT, HELP_LINES_PER_PAGE } from './data/help.js';
 
 const GAME_TITLE = 'RPG古事記';
 const TWEEN_FRAMES = 8; // 1タイル移動にかけるフレーム数
@@ -90,6 +91,34 @@ function main() {
   const sprites = buildSprites();
   const tiles = buildTiles();
   const input = createInput(window);
+
+  // タッチ操作：画面下のボタンを押している間だけ、そのキーを押した扱いにする。
+  // 指で触れる端末（pointer: coarse）でだけ出し、マウス環境では隠したままにする。
+  function setupTouchPad() {
+    const pad = document.getElementById('pad');
+    if (!pad) return;
+    // iPadはトラックパッドを繋ぐと pointer:coarse でなくなることがあるため、
+    // タッチ点の数も見て判定する。マウスだけの環境では隠したままにする。
+    const coarse = typeof window.matchMedia === 'function'
+      && window.matchMedia('(pointer: coarse)').matches;
+    const touchable = coarse || (navigator.maxTouchPoints || 0) > 0;
+    pad.hidden = !touchable;
+    // 表示しない環境でも配線はしておく（開発時に手で表示して確かめられるように）
+    for (const btn of pad.querySelectorAll('[data-key]')) {
+      const key = btn.dataset.key;
+      const press = (e) => {
+        e.preventDefault(); // 画面のスクロールや拡大を起こさせない
+        audio.unlock();     // 音の自動再生制限は利用者の操作でしか解除できない
+        input.press(key);
+      };
+      const release = (e) => { e.preventDefault(); input.release(key); };
+      btn.addEventListener('pointerdown', press);
+      btn.addEventListener('pointerup', release);
+      btn.addEventListener('pointercancel', release);
+      btn.addEventListener('pointerleave', release); // 指がボタンの外へ滑ったとき
+      btn.addEventListener('contextmenu', (e) => e.preventDefault()); // 長押しメニュー抑止
+    }
+  }
   const renderer = createRenderer(ctx, sprites, tiles);
   const audio = createAudio();
   // 音楽の入切は前回の選択を引き継ぐ
@@ -115,11 +144,12 @@ function main() {
     eventStartMap: null, // イベント開始時のマップid（完了時に比較してワープ演出を出す）
     quiz: null,        // { data, id, win, phase: 'ask'|'result', resultMsg }
     battle: null,      // { data, id, phase: 'command'|'item'|'log', cmdWin, itemWin, logBox }
+    help: null,        // 操作方法の案内（{ box, back }）
     menu: null,        // { section: 'root'|'power'|'tab'|'list'|'detail', rootWin, tabWin, bookWin, bookIds, detailBox }
     ending: null,      // { stage, box } 真エンディング（神々の系譜、Z送り4段階）
     story: null,       // 章の導入・締めの語り（全画面テキスト、Z送り）
     locationTimer: LOCATION_SHOW_FRAMES, // 現在地ラベルの残り表示フレーム数
-    title: createChoiceWindow(hasSave ? ['はじめから', 'つづきから'] : ['はじめから']),
+    title: createChoiceWindow(hasSave ? ['はじめから', 'つづきから', 'そうさ'] : ['はじめから', 'そうさ']),
   };
 
   // デバッグ・自動テスト用にstateを公開する（ゲームロジックからは参照しない）
@@ -236,7 +266,7 @@ function main() {
   // タイトル画面へ戻す（エンディング後）。オートセーブ済みなので「つづきから」が選べる。
   function backToTitle() {
     const hasSaveNow = loadGame(localStorage) !== null;
-    state.title = createChoiceWindow(hasSaveNow ? ['はじめから', 'つづきから'] : ['はじめから']);
+    state.title = createChoiceWindow(hasSaveNow ? ['はじめから', 'つづきから', 'そうさ'] : ['はじめから', 'そうさ']);
     audio.stopBgm();
     state.mode = 'title';
   }
@@ -264,7 +294,7 @@ function main() {
   function openMenu() {
     state.menu = {
       section: 'root',
-      rootWin: createChoiceWindow(['つよさ', '旅の書', bgmLabel(), 'とじる']),
+      rootWin: createChoiceWindow(['つよさ', '旅の書', 'そうさ', bgmLabel(), 'とじる']),
       tabWin: null,
       bookWin: null,
       bookIds: null,   // m.bookWin.items（もどる含む）に対応するCODEXのid配列
@@ -290,6 +320,7 @@ function main() {
     else if (input.consume('ArrowDown')) moveChoiceCursor(state.title, 1);
     else if (input.consume('z')) {
       const label = state.title.items[state.title.cursor];
+      if (label === 'そうさ') { openHelp('title'); return; }
       if (label === 'つづきから') {
         const loaded = loadGame(localStorage);
         if (loaded) {
@@ -310,6 +341,33 @@ function main() {
       audio.playBgm('field');
       state.mode = 'field';
     }
+  }
+
+  // ── help：操作方法（タイトルとメニューから開く全画面の案内）──
+  function openHelp(back) {
+    state.help = { box: messageBox(HELP_TEXT, { linesPerPage: HELP_LINES_PER_PAGE }), back };
+    state.mode = 'help';
+  }
+
+  function closeHelp() {
+    const back = state.help.back; // 呼び出し元（title か menu）へ戻す
+    state.help = null;
+    state.mode = back;
+  }
+
+  function updateHelp() {
+    tickMessageBox(state.help.box);
+    if (input.consume('x')) { closeHelp(); return; }
+    if (input.consumeAdvance()) {
+      const more = advanceMessageBox(state.help.box);
+      if (!more) closeHelp();
+    }
+  }
+
+  function drawHelp() {
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, 256, 224);
+    drawMessageBox(ctx, state.help.box, 8, 16, 240, 192);
   }
 
   function drawTitle() {
@@ -636,16 +694,20 @@ function main() {
       else if (input.consume('ArrowDown')) moveChoiceCursor(m.rootWin, 1);
       else if (input.consume('x')) { state.menu = null; state.mode = 'field'; }
       else if (input.consume('z')) {
+        // 項目の増減でずれないよう、位置ではなくラベルで振り分ける
         const cur = m.rootWin.cursor;
-        if (cur === 0) { m.section = 'power'; }
-        else if (cur === 1) {
+        const label = m.rootWin.items[cur];
+        if (label === 'つよさ') { m.section = 'power'; }
+        else if (label === '旅の書') {
           m.tabWin = createChoiceWindow([...CODEX_CATEGORIES, 'もどる']);
           m.section = 'tab';
-        } else if (cur === 2) {
+        } else if (label === 'そうさ') {
+          openHelp('menu');
+        } else if (label.startsWith('音楽')) {
           // 音楽の入切。カーソル位置は保ったままラベルだけ更新する
           audio.toggle();
           saveSettings();
-          m.rootWin.items[2] = bgmLabel();
+          m.rootWin.items[cur] = bgmLabel();
         } else { state.menu = null; state.mode = 'field'; }
       }
     } else if (m.section === 'power') {
@@ -737,6 +799,15 @@ function main() {
       return;
     }
 
+    // 操作方法はタイトルからもメニューからも開くため、フィールドを描かず全画面で見せる
+    if (state.mode === 'help') {
+      updateHelp();
+      // updateHelp中に読み終えて呼び出し元へ戻ることがある
+      if (state.mode === 'help') drawHelp();
+      requestAnimationFrame(loop);
+      return;
+    }
+
     // 章の語りはフィールドを描かず全画面で見せる（endingと同じ扱い）
     if (state.mode === 'story') {
       updateStory();
@@ -788,6 +859,7 @@ function main() {
     requestAnimationFrame(loop);
   }
 
+  setupTouchPad();
   requestAnimationFrame(loop);
 }
 
