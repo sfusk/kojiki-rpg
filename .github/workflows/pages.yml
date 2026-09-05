@@ -36,7 +36,11 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      # enablement: Pages が未設定でもここで有効化する
+      # （手で Settings → Pages を触らなくても初回から通るようにするため）
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
       # 配信するのは遊ぶのに要るファイルだけ。テスト・開発サーバー・依存は含めない
       - name: 配信ファイルを集める
         run: |
