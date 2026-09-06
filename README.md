@@ -28,3 +28,7 @@ npm run dev
 ```
 npm test
 ```
+
+## 開発
+
+作りの説明・これまでの判断・つまずいた点は [docs/development-notes.md](docs/development-notes.md) にまとめてある。
