@@ -9,6 +9,10 @@ export const CH4 = {
   title: '第四章 出雲',
   // 現在の地名（表示ではかっこ書きで添える）：ヤマタノオロチ退治の舞台・斐伊川上流は島根県奥出雲町
   modern: '奥出雲',
+  illustrations: {
+    prologue: { src: 'assets/illustrations/ch4.png', title: '第四章 出雲' },
+    epilogue: { src: 'assets/illustrations/ch4.png', title: '出雲の物語' },
+  },
   // 章の導入：ゲーム中では描ききれない前史と背景
   prologue: '高天原を追われた\nスサノオが降り立ったのは\n出雲国、肥河の上流。\n\n川上から一本の箸が\n流れてくるのを見て\n人の住まいを知った。\n\nそこにいたのは\n泣き暮らす老夫婦と\nその娘であった。\n\n八人いた娘は年ごとに\n一人ずつ失われ\n今年ついに最後の一人に\nその時が迫っている。',
   // 章の締め：その出来事が後世に残したもの
@@ -89,6 +93,7 @@ export const CH4 = {
         { if: 'ch4_slay',
           then: [{ msg: 'オロチのむくろが\n横たわる。' }],
           else: [
+            { illustration: { src: 'assets/illustrations/ch4.png', title: 'ヤマタノオロチ' } },
             { battle: 'orochi' },
             { msg: 'オロチの尾から' },
             { msg: '剣が出てきた！' },

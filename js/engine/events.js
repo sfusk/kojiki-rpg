@@ -16,6 +16,7 @@ export function stepEvent(ev, state) {
     if (c.codex) { addCodex(state, c.codex); continue; }
     if (c.warp) { state.pos = { ...c.warp }; continue; }
     // story は章の導入・締めの語り。現在の章の prologue / epilogue を全画面で見せる
+    if (c.illustration) return { kind: 'illustration', scene: c.illustration };
     if (c.story) return { kind: 'story', which: c.story };
     if (c.msg) return { kind: 'msg', text: c.msg };
     if (c.quiz) return { kind: 'quiz', id: c.quiz };

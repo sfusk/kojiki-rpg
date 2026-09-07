@@ -14,6 +14,10 @@ export const CH8 = {
   title: '第八章 大和',
   // 現在の地名（表示ではかっこ書きで添える）：大和は現在の奈良県
   modern: '奈良',
+  illustrations: {
+    prologue: { src: 'assets/illustrations/ch8.png', title: '第八章 大和' },
+    epilogue: { src: 'assets/illustrations/ch8.png', title: '大和の物語' },
+  },
   // 章の導入：ゲーム中では描ききれない前史と背景
   prologue: '日向にあった\nイワレビコは\n天下を治めるにふさわしい\n地を求めて東へ発った。\n\nだが浪速で\nナガスネビコに阻まれ\n兄イツセを失う。\n\n日の神の子でありながら\n日に向かって戦ったのが\n誤りであったと悟り\n軍を南へ回して\n熊野から大和を\n目指すことにした。\n\n険しい山道で\n一行は荒ぶる神の気に\n倒れ伏す。',
   // 章の締め：その出来事が後世に残したもの
@@ -58,6 +62,7 @@ export const CH8 = {
             { msg: '八咫烏を遣わし' },
             { msg: '大和への道を' },
             { msg: '導いた。' },
+            { illustration: { src: 'assets/illustrations/ch8.png', title: '八咫烏の導き' } },
             { msg: 'かくして神武は' },
             { msg: '橿原の都で' },
             { msg: '天皇に即位した。' },

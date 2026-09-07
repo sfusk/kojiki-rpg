@@ -9,6 +9,10 @@ export const CH6 = {
   title: '第六章 国譲り',
   // 現在の地名（表示ではかっこ書きで添える）：国譲りの談判の地は島根県出雲市の稲佐の浜
   modern: '稲佐の浜',
+  illustrations: {
+    prologue: { src: 'assets/illustrations/ch6.png', title: '第六章 国譲り' },
+    epilogue: { src: 'assets/illustrations/ch6.png', title: '国譲りの物語' },
+  },
   // 章の導入：ゲーム中では描ききれない前史と背景
   prologue: '葦原中国が豊かに\n実るのを見た\n高天原の神々は\nこの国は我が子が\n治めるべきだと考えた。\n\nまずアメノホヒを\n遣わしたが\n三年たっても\n復命しなかった。\n\n次にアメノワカヒコを\n遣わすと\n大国主の娘を妻とし\n八年たっても\n戻らなかった。\n\n問いただす雉を射た矢は\n高天原まで届き\nその矢が投げ返されて\n彼の胸を貫いた。',
   // 章の締め：その出来事が後世に残したもの
@@ -119,6 +123,7 @@ export const CH6 = {
             { msg: '大きな宮を' },
             { msg: '建てて祀るならば…' },
             { msg: 'それで譲ろう。' },
+            { illustration: { src: 'assets/illustrations/ch6.png', title: '稲佐の浜の国譲り' } },
             { codex: 'kuniyuzuri' },
             { set: 'ch6_yuzuri' },
           ] },

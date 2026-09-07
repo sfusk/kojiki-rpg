@@ -15,6 +15,10 @@ export const CH7 = {
   title: '第七章 日向',
   // 現在の地名（表示ではかっこ書きで添える）：日向・高千穂は宮崎県
   modern: '宮崎',
+  illustrations: {
+    prologue: { src: 'assets/illustrations/ch7.png', title: '第七章 日向' },
+    epilogue: { src: 'assets/illustrations/ch7.png', title: '日向の物語' },
+  },
   // 章の導入：ゲーム中では描ききれない前史と背景
   prologue: '国を譲り受けた\n高天原の神々は\nアマテラスの孫\nニニギを地上へ送った。\n\n天の八衢では\n異形の神が待っていたが\nアメノウズメが\n名を問うと\n道案内に立った猿田彦であった。\n\nニニギが降り立ったのは\n筑紫の日向の\n高千穂の峰。\n\n三種の神器を携えた\nこの天孫降臨から\n地上の物語が始まる。',
   // 章の締め：その出来事が後世に残したもの
@@ -126,6 +130,7 @@ export const CH7 = {
             { msg: 'ニニギは' },
             { msg: '高千穂の峰に' },
             { msg: '天下った。' },
+            { illustration: { src: 'assets/illustrations/ch7.png', title: '天孫降臨' } },
             { codex: 'ninigi' },
             { set: 'ch7_kourin' },
           ] },

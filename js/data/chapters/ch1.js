@@ -8,6 +8,10 @@ export const CH1 = {
   title: '第一章 オノゴロ島',
   // 現在の地名（表示ではかっこ書きで添える）：オノゴロ島の伝承地は淡路島（兵庫県）
   modern: '淡路島',
+  illustrations: {
+    prologue: { src: 'assets/illustrations/ch1-prologue.png', title: '第一章 オノゴロ島' },
+    epilogue: { src: 'assets/illustrations/ch1-kuniumi.png', title: '国生みのその先へ' },
+  },
   // 章の導入：ゲーム中では描ききれない前史と背景
   prologue: '天地が初めて分かれた時\n高天原に三柱の神が現れ\nやがて神々は\n十二代を重ねた。\n\nその最後に生まれたのが\nイザナギとイザナミ。\n二柱は天つ神から\n「漂へる国を修め\n理り固め成せ」と\n命じられる。\n\n授かったのは天沼矛。\n天浮橋に立ち\nまだ形をなさぬ海原へと\n差し下ろす。',
   // 章の締め：その出来事が後世に残したもの
@@ -93,6 +97,7 @@ export const CH1 = {
             { msg: '天つ神に占いを頼むと' },
             { msg: '男神から先に\n声をかけよと\n教えられた。' },
             { msg: '言われたとおり\nやり直すと…' },
+            { illustration: { src: 'assets/illustrations/ch1-kuniumi.png', title: '淡路島の誕生' } },
             { msg: '淡路島が生まれた！' },
             { codex: 'awaji' },
             { set: 'ch1_ritual' },

@@ -10,6 +10,10 @@ export const CH3 = {
   title: '第三章 高天原',
   // 現在の地名（表示ではかっこ書きで添える）：高天原は天上界で、現実の土地に対応しない
   modern: '天上の国',
+  illustrations: {
+    prologue: { src: 'assets/illustrations/ch3.png', title: '第三章 高天原' },
+    epilogue: { src: 'assets/illustrations/ch3.png', title: '高天原の物語' },
+  },
   // 章の導入：ゲーム中では描ききれない前史と背景
   prologue: '禊によって生まれたのが\nアマテラス、ツクヨミ、\nスサノオの三貴子。\n\nイザナギは高天原を\nアマテラスに、夜を\nツクヨミに、海原を\nスサノオに委ねた。\n\nしかしスサノオは\n亡き母を慕って泣き続け\n青山を枯らすほどに\n荒れ果てさせたため\nついに追放される。\n\n姉に別れを告げようと\n高天原へ上るその足音に\n天地は鳴り響いた。',
   // 章の締め：その出来事が後世に残したもの
@@ -138,6 +142,7 @@ export const CH3 = {
             { msg: 'その隙にタヂカラオが' },
             { msg: '戸を引き開けた！' },
             { codex: 'tajikarao' },
+            { illustration: { src: 'assets/illustrations/ch3.png', title: '天岩戸が開く' } },
             { msg: '光が世に戻った。' },
             { set: 'ch3_iwato' },
           ] },

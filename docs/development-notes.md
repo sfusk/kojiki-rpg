@@ -5,7 +5,7 @@ RPG古事記の作りと、これまでに決めたこと・つまずいたこ�
 
 - 公開URL: <https://sfusk.github.io/kojiki-rpg/>
 - リポジトリ: `sfusk/kojiki-rpg`（public）
-- 最終更新: 2026-09-05
+- 最終更新: 2026-09-07
 
 ---
 
@@ -76,7 +76,7 @@ tests/              vitest（実行時依存ゼロ、DOM非依存）
 ### イベントコマンド
 
 `msg` / `set` / `give` / `take` / `orb` / `codex` / `if(then/else)` / `warp` / `quiz` /
-`battle` / `story` の配列で書く。`story: 'prologue' | 'epilogue'` は章の導入・締めを
+`battle` / `story` / `illustration` の配列で書く。`story: 'prologue' | 'epilogue'` は章の導入・締めを
 全画面で見せる。
 
 ### ワールドマップ（34×36）
@@ -171,7 +171,7 @@ GitHub Pages へ配信する。反映まで1〜2分。
 - **CSP**（`index.html`）: 外部リソースを一切読まないページなので `default-src 'none'`。
   CDN・フォント・API通信ゼロ、`eval` も `innerHTML` も使っていない
 - **Actions の権限は最小**: `contents:read` / `pages:write` / `id-token:write` のみ。
-  配信するのは `index.html`・`css`・`js` だけで、テストや依存は含めない
+  配信するのは `index.html`・`css`・`js`・`assets` だけで、テストや依存は含めない
 - **履歴の掃除**（2026-09-05実施）: 初期コミットに入っていた node_modules（16MBの
   バイナリ）を除去し18MB→308KB、コミッターのメールを noreply に置換。
   バックアップは `~/Projects/kojiki-rpg-backup-20260905.bundle`
@@ -192,3 +192,29 @@ GitHub Pages へ配信する。反映まで1〜2分。
 **テストは「一度やらかしたこと」を書き留める場所として使っている。**
 地形をいじる、NPCを動かす、文章を足す——どれも人の目では見落とすので、
 落ちるテストが先に教えてくれる状態を保つこと。
+
+
+## 6. 第一章の一枚絵（2026-09-07）
+
+第一章の導入、淡路島誕生の儀式、章末に一枚絵を表示する。素材は
+`assets/illustrations/ch1-prologue.png` と `ch1-kuniumi.png` の2枚で、章末は国生みの絵を再利用。
+章データの `illustrations.prologue` / `illustrations.epilogue` に `{ src, title }` を指定すると、
+既存の語りの前に絵を表示する。途中のイベントでは `{ illustration: { src, title } }` を使う。
+未指定の章は従来の語りだけを表示する。
+
+絵は縦横比を保って全体を収め、本文は既存の語り・会話画面で読む。
+Z / Enter / 下矢印・タッチの「けってい」で進む。入退場時は入力を消費して送りの混入を防ぐ。
+読み込み中も決定でスキップでき、画像が取得できなければ自動で続行する。
+公開ワークフローは `assets` も配信する。
+
+確認時はBGMをOFFにし、新規開始→第一章入場、儀式の初回通過、クリア時の章末を確認する。
+セーブ済みの通過フラグは維持されるので、既に見たイベントは繰り返さない。
+
+
+### 全章・タイトルへの拡張（2026-09-07b）
+
+第二〜八章も `assets/illustrations/ch2.png` 〜 `ch8.png` を、章頭・代表イベント・章末で共有する。
+代表イベントは黄泉の別れ、天岩戸、オロチ戦、白兎の回復、国譲り、天孫降臨、八咫烏の導き。
+初回通過フラグの既存分岐内に配置し、再訪時は表示しない。
+タイトルは `title.png` を中央トリミングで全画面に敷き、暗い半透明の幕を重ねる。
+タイトル・メニューの位置と操作は維持。画像未取得時は従来の黒背景で操作できる。

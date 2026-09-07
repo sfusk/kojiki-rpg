@@ -1,6 +1,7 @@
 // ゲームループ（title/field/msg/quiz/battle/menu モード）。
 // 内部解像度256x224（16x14タイル）を2倍描画し、512x448の物理canvasに表示する。
 import { buildSprites, buildTiles } from './data/sprites.js';
+import { createIllustration, advanceIllustration, fitIllustration, drawTitleBackground } from './engine/illustration.js';
 import { createInput } from './engine/input.js';
 import { createRenderer, drawField, TILE } from './engine/renderer.js';
 import { tryStep, DIRS } from './engine/movement.js';
@@ -83,6 +84,8 @@ function createHero(tx, ty) {
 }
 
 function main() {
+  const titleArt = new Image();
+  titleArt.src = 'assets/illustrations/title.png';
   const canvas = document.getElementById('game');
   const ctx = canvas.getContext('2d');
   ctx.imageSmoothingEnabled = false;
@@ -147,6 +150,7 @@ function main() {
     help: null,        // 操作方法の案内（{ box, back }）
     menu: null,        // { section: 'root'|'power'|'tab'|'list'|'detail', rootWin, tabWin, bookWin, bookIds, detailBox }
     ending: null,      // { stage, box } 真エンディング（神々の系譜、Z送り4段階）
+    illustration: null, // 語り・イベントの一枚絵
     story: null,       // 章の導入・締めの語り（全画面テキスト、Z送り）
     locationTimer: LOCATION_SHOW_FRAMES, // 現在地ラベルの残り表示フレーム数
     title: createChoiceWindow(hasSave ? ['はじめから', 'つづきから', 'そうさ'] : ['はじめから', 'そうさ']),
@@ -196,12 +200,21 @@ function main() {
       state.quiz = { data: createQuiz(questions), id: r.id, phase: 'ask', win: null, question: null, result: null, resultMsg: null };
       startQuizQuestion();
       state.mode = 'quiz';
+    } else if (r.kind === 'illustration') {
+      state.illustration = createIllustration(r.scene, input);
+      state.mode = 'illustration';
     } else if (r.kind === 'story') {
       // 章の導入・締め。テキストが未定義の章では黙って読み飛ばす
       const text = (currentChapter() || {})[r.which];
       if (!text) { advanceActiveEvent(); return; }
       state.story = messageBox(text, { linesPerPage: STORY_LINES_PER_PAGE });
-      state.mode = 'story';
+      const scene = (currentChapter() || {}).illustrations?.[r.which];
+      if (scene) {
+        state.illustration = createIllustration(scene, input);
+        state.mode = 'illustration';
+      } else {
+        state.mode = 'story';
+      }
     } else if (r.kind === 'battle') {
       const boss = BOSSES[r.id];
       state.returnPos = { tx: state.hero.tx, ty: state.hero.ty, dir: state.hero.dir };
@@ -371,8 +384,7 @@ function main() {
   }
 
   function drawTitle() {
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, 256, 224);
+    drawTitleBackground(ctx, titleArt);
     // 半角と全角が混在するため実測して中央に置く
     ctx.save();
     ctx.font = FONT;
@@ -481,6 +493,30 @@ function main() {
         if (trigger) startGatedEvent(trigger);
       }
     }
+  }
+
+  function updateIllustration() {
+    if (!advanceIllustration(state.illustration, input)) return;
+    state.illustration = null;
+    if (state.story) state.mode = 'story';
+    else advanceActiveEvent();
+  }
+
+  function drawIllustration() {
+    const scene = state.illustration;
+    ctx.fillStyle = '#171c25';
+    ctx.fillRect(0, 0, 256, 224);
+    if (scene.status === 'ready') {
+      const box = fitIllustration(scene.image.naturalWidth, scene.image.naturalHeight, 256, 170);
+      ctx.save();
+      ctx.imageSmoothingEnabled = true;
+      ctx.drawImage(scene.image, box.x, 25 + box.y, box.width, box.height);
+      ctx.restore();
+    } else {
+      drawText(ctx, '絵を読み込み中…', 24, 96);
+    }
+    drawText(ctx, scene.title || '', 8, 5);
+    drawText(ctx, 'けってい で つづく', 48, 203);
   }
 
   // ── story：章の導入・締めの語り（全画面・Z送り） ──────
@@ -804,6 +840,13 @@ function main() {
       updateHelp();
       // updateHelp中に読み終えて呼び出し元へ戻ることがある
       if (state.mode === 'help') drawHelp();
+      requestAnimationFrame(loop);
+      return;
+    }
+
+    if (state.mode === 'illustration') {
+      updateIllustration();
+      if (state.mode === 'illustration') drawIllustration();
       requestAnimationFrame(loop);
       return;
     }

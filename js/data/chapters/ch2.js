@@ -9,6 +9,10 @@ export const CH2 = {
   title: '第二章 黄泉比良坂',
   // 現在の地名（表示ではかっこ書きで添える）：黄泉比良坂＝伊賦夜坂は島根県松江市東出雲町
   modern: '東出雲',
+  illustrations: {
+    prologue: { src: 'assets/illustrations/ch2.png', title: '第二章 黄泉比良坂' },
+    epilogue: { src: 'assets/illustrations/ch2.png', title: '黄泉比良坂の物語' },
+  },
   // 章の導入：ゲーム中では描ききれない前史と背景
   prologue: '火の神カグツチを生んだ時\nイザナミは身を焼かれ\n命を落とした。\n\n嘆いたイザナギは\n十拳剣でわが子を斬る。\n飛び散った血からもまた\n新たな神々が生まれた。\n\n生と死が分かちがたく\n結びついていることを\nこの物語は語っている。\n\nイザナギは妻を求め\n死者の国へ降りてゆく。',
   // 章の締め：その出来事が後世に残したもの
@@ -68,6 +72,7 @@ export const CH2 = {
             { battle: 'yomotsu' },
             { msg: '追いすがる\nイザナミの前で' },
             { msg: '坂のふもとに\n大きな岩を置いた。' },
+            { illustration: { src: 'assets/illustrations/ch2.png', title: '黄泉の別れ' } },
             { msg: 'イザナミ「一日に\n千人くびり殺す」' },
             { msg: 'イザナギ「ならば\n一日に千五百人\n生まん」' },
             { codex: 'yomotsuhirasaka' },

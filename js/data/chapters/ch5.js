@@ -9,6 +9,10 @@ export const CH5 = {
   title: '第五章 因幡・根の国',
   // 現在の地名（表示ではかっこ書きで添える）：因幡は現在の鳥取県東部
   modern: '鳥取',
+  illustrations: {
+    prologue: { src: 'assets/illustrations/ch5.png', title: '第五章 因幡・根の国' },
+    epilogue: { src: 'assets/illustrations/ch5.png', title: '因幡・根の国の物語' },
+  },
   // 章の導入：ゲーム中では描ききれない前史と背景
   prologue: 'スサノオの血を引く\nオオナムヂには\n八十神と呼ばれる\n大勢の兄たちがいた。\n\n兄たちは因幡の\n八上比売に求婚しようと\n連れ立って旅に出る。\n\n末子のオオナムヂは\nその荷物をすべて\n背負わされ\n一行の最後を\n遅れて歩いていた。\n\n気多の岬にさしかかった時\n一羽の兎が倒れていた。',
   // 章の締め：その出来事が後世に残したもの
@@ -52,6 +56,7 @@ export const CH5 = {
             { msg: '「真水で洗い」' },
             { msg: '「がまの穂にくるまれ」' },
             { msg: 'その通りにすると…' },
+            { illustration: { src: 'assets/illustrations/ch5.png', title: '因幡の白兎' } },
             { msg: '痛みがすーっと引いた！' },
             { codex: 'inaba' },
             { codex: 'okuninushi' },
